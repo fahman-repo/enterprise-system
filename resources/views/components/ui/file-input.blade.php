@@ -1,0 +1,3 @@
+@props(['disabled' => false])
+
+<input type="file" @disabled($disabled) {{ $attributes->merge(['class' => 'flex w-full cursor-pointer rounded-md border border-input bg-transparent text-sm shadow-xs transition-colors file:me-3 file:h-9 file:cursor-pointer file:rounded-l-md file:border-0 file:border-e file:border-input file:bg-muted file:px-3 file:text-sm file:font-medium hover:file:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:cursor-not-allowed disabled:opacity-50 dark:file:text-foreground']) }}>

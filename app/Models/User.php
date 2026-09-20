@@ -3,6 +3,7 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Models\Concerns\Auditable;
 use App\Services\PermissionService;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -13,7 +14,13 @@ use Illuminate\Notifications\Notifiable;
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
-    use HasFactory, Notifiable;
+    use Auditable, HasFactory, Notifiable;
+
+    /**
+     * Whether the current save is changing the password; the audit
+     * entry records the fact without ever storing the hash.
+     */
+    protected bool $passwordChanged = false;
 
     /**
      * The attributes that are mass assignable.
@@ -50,12 +57,34 @@ class User extends Authenticatable
         ];
     }
 
+    public function auditLogName(): string
+    {
+        return 'user';
+    }
+
+    public function auditExcept(): array
+    {
+        return ['password', 'remember_token', 'email_verified_at'];
+    }
+
+    public function auditProperties(): array
+    {
+        return ['password_changed' => $this->passwordChanged];
+    }
+
     /**
      * The single role assigned to this user.
      */
     public function role(): BelongsTo
     {
         return $this->belongsTo(Role::class);
+    }
+
+    protected static function booted(): void
+    {
+        static::updating(function (User $user) {
+            $user->passwordChanged = $user->isDirty('password');
+        });
     }
 
     /**

@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Http\Controllers\Concerns\InteractsWithDataTable;
 use App\Models\Menu;
 use App\Models\Role;
-use App\Services\PermissionService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -58,8 +57,7 @@ class RolesController extends Controller
             'slug' => ['required', 'string', 'max:255', 'alpha_dash', 'unique:roles,slug'],
         ]);
 
-        $role = Role::create($data);
-        $role->menus()->sync($this->permissionsFrom($request));
+        app(Role::class)->withPermissions($data, $this->permissionsFrom($request));
 
         return redirect()->route('roles.index')->with('status', __('Role created.'));
     }
@@ -95,9 +93,7 @@ class RolesController extends Controller
                 ->withInput();
         }
 
-        $role->update($data);
-        $role->menus()->sync($permissions);
-        app(PermissionService::class)->flush();
+        $role->withPermissions($data, $permissions);
 
         return redirect()->route('roles.index')->with('status', __('Role updated.'));
     }

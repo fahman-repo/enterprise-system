@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\Auditable;
 use App\Services\PermissionService;
 use Database\Factories\MenuFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -14,7 +15,7 @@ use Illuminate\Support\Collection;
 class Menu extends Model
 {
     /** @use HasFactory<MenuFactory> */
-    use HasFactory;
+    use Auditable, HasFactory;
 
     /**
      * Action flags available per menu item.
@@ -38,6 +39,21 @@ class Menu extends Model
         'log-out',
         'alert-circle',
         'chevron-down',
+        'package',
+        'folder-tree',
+        'tag',
+        'ruler',
+        'briefcase',
+        'building',
+        'building-2',
+        'network',
+        'badge',
+        'layers',
+        'map-pin',
+        'toggle-right',
+        'book-open',
+        'graduation-cap',
+        'heart',
     ];
 
     protected $fillable = [
@@ -57,6 +73,11 @@ class Menu extends Model
             'sort_order' => 'integer',
             'is_active' => 'boolean',
         ];
+    }
+
+    public function auditLogName(): string
+    {
+        return 'menu';
     }
 
     public function parent(): BelongsTo
