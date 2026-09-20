@@ -1,0 +1,45 @@
+- generic [ref=f7e2]:
+  - complementary [ref=f7e3]:
+    - generic [ref=f7e4]: Laravel
+    - navigation [ref=f7e12]:
+      - link "Dashboard" [ref=f7e13] [cursor=pointer]:
+        - /url: http://enterprise-system.test/dashboard
+      - link "Users" [ref=f7e21] [cursor=pointer]:
+        - /url: http://enterprise-system.test/users
+      - link "Roles" [ref=f7e29] [cursor=pointer]:
+        - /url: http://enterprise-system.test/roles
+      - link "Menus" [ref=f7e35] [cursor=pointer]:
+        - /url: http://enterprise-system.test/menus
+  - generic [ref=f7e39]:
+    - banner [ref=f7e40]:
+      - heading "New user" [level=1] [ref=f7e42]
+      - button "Toggle theme" [ref=f7e43]
+      - button "A Administrator" [ref=f7e47]:
+        - generic [ref=f7e48]: A
+        - generic [ref=f7e50]: Administrator
+    - main [ref=f7e53]:
+      - generic [ref=f7e54]:
+        - generic [ref=f7e55]:
+          - heading "New user" [level=1] [ref=f7e56]
+          - paragraph [ref=f7e57]: Create an account for a new team member.
+        - generic [ref=f7e58]:
+          - generic [ref=f7e59]:
+            - heading "New user" [level=3] [ref=f7e60]
+            - paragraph [ref=f7e61]: Create an account for a new team member.
+          - generic [ref=f7e63]:
+            - generic [ref=f7e64]:
+              - generic [ref=f7e65]: Name
+              - textbox "Name" [active] [ref=f7e66]
+            - generic [ref=f7e67]:
+              - generic [ref=f7e68]: Email
+              - textbox "Email" [ref=f7e69]
+            - generic [ref=f7e70]: Password
+            - generic [ref=f7e72]:
+              - generic [ref=f7e73]: Role
+              - combobox "Role" [ref=f7e74]:
+                - option "No role" [selected]
+                - option "Admin"
+            - generic [ref=f7e75]:
+              - link "Cancel" [ref=f7e76] [cursor=pointer]:
+                - /url: http://enterprise-system.test/users
+              - button "Save" [ref=f7e77]

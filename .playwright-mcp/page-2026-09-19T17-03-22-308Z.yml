@@ -1,0 +1,68 @@
+- generic [ref=f1e2]:
+  - complementary [ref=f1e3]:
+    - generic [ref=f1e4]: Laravel
+    - navigation [ref=f1e12]:
+      - link "Dashboard" [ref=f1e13] [cursor=pointer]:
+        - /url: http://enterprise-system.test/dashboard
+      - link "Users" [ref=f1e21] [cursor=pointer]:
+        - /url: http://enterprise-system.test/users
+      - link "Roles" [ref=f1e29] [cursor=pointer]:
+        - /url: http://enterprise-system.test/roles
+      - link "Menus" [ref=f1e35] [cursor=pointer]:
+        - /url: http://enterprise-system.test/menus
+  - generic [ref=f1e39]:
+    - banner [ref=f1e40]:
+      - heading "Dashboard" [level=1] [ref=f1e42]
+      - button "Toggle theme" [active] [ref=f1e43]
+      - button "A Administrator" [ref=f1e51]:
+        - generic [ref=f1e52]: A
+        - generic [ref=f1e54]: Administrator
+    - main [ref=f1e57]:
+      - generic [ref=f1e58]:
+        - generic [ref=f1e59]:
+          - heading "Dashboard" [level=1] [ref=f1e60]
+          - paragraph [ref=f1e61]: Overview of your workspace. Figures below are placeholders.
+        - generic [ref=f1e62]:
+          - generic [ref=f1e63]:
+            - generic [ref=f1e64]:
+              - paragraph [ref=f1e65]: Total users
+              - heading "1,204" [level=3] [ref=f1e66]
+            - paragraph [ref=f1e68]:
+              - text: +12.5%
+              - generic [ref=f1e69]: vs last month
+          - generic [ref=f1e70]:
+            - generic [ref=f1e71]:
+              - paragraph [ref=f1e72]: Active sessions
+              - heading "312" [level=3] [ref=f1e73]
+            - paragraph [ref=f1e75]:
+              - text: +4.1%
+              - generic [ref=f1e76]: vs last month
+          - generic [ref=f1e77]:
+            - generic [ref=f1e78]:
+              - paragraph [ref=f1e79]: Pending invites
+              - heading "18" [level=3] [ref=f1e80]
+            - paragraph [ref=f1e82]:
+              - text: "-2.0%"
+              - generic [ref=f1e83]: vs last month
+          - generic [ref=f1e84]:
+            - generic [ref=f1e85]:
+              - paragraph [ref=f1e86]: Monthly revenue
+              - heading "$48.2K" [level=3] [ref=f1e87]
+            - paragraph [ref=f1e89]:
+              - text: +8.9%
+              - generic [ref=f1e90]: vs last month
+        - generic [ref=f1e91]:
+          - generic [ref=f1e92]:
+            - generic [ref=f1e93]:
+              - heading "Activity" [level=3] [ref=f1e94]
+              - paragraph [ref=f1e95]: Recent workspace events will appear here.
+            - generic [ref=f1e104]:
+              - paragraph [ref=f1e105]: Nothing here yet
+              - paragraph [ref=f1e106]: Data will appear once your workspace is connected.
+          - generic [ref=f1e107]:
+            - generic [ref=f1e108]:
+              - heading "Quick actions" [level=3] [ref=f1e109]
+              - paragraph [ref=f1e110]: Placeholder shortcuts.
+            - generic [ref=f1e112]:
+              - button "Invite a user" [disabled]
+              - button "Workspace settings" [disabled]

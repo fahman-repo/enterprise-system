@@ -1,0 +1,70 @@
+- generic [ref=f10e2]:
+  - complementary [ref=f10e3]:
+    - generic [ref=f10e4]: Laravel
+    - navigation [ref=f10e12]:
+      - link "Dashboard" [ref=f10e13] [cursor=pointer]:
+        - /url: http://enterprise-system.test/dashboard
+      - link "Users" [ref=f10e21] [cursor=pointer]:
+        - /url: http://enterprise-system.test/users
+      - link "Roles" [ref=f10e29] [cursor=pointer]:
+        - /url: http://enterprise-system.test/roles
+      - link "Menus" [ref=f10e35] [cursor=pointer]:
+        - /url: http://enterprise-system.test/menus
+  - generic [ref=f10e39]:
+    - banner [ref=f10e40]:
+      - heading "Edit menu item" [level=1] [ref=f10e42]
+      - button "Toggle theme" [ref=f10e43]
+      - button "A Administrator" [ref=f10e47]:
+        - generic [ref=f10e48]: A
+        - generic [ref=f10e50]: Administrator
+    - main [ref=f10e53]:
+      - generic [ref=f10e54]:
+        - generic [ref=f10e55]:
+          - 'heading "Edit menu item: Users" [level=1] [ref=f10e56]'
+          - paragraph [ref=f10e57]: Update the sidebar entry below.
+        - generic [ref=f10e58]:
+          - generic [ref=f10e59]:
+            - heading "Edit menu item" [level=3] [ref=f10e60]
+            - paragraph [ref=f10e61]: Sidebar entries are rendered from these records, ordered by sort value.
+          - generic [ref=f10e63]:
+            - generic [ref=f10e64]:
+              - generic [ref=f10e65]:
+                - generic [ref=f10e66]: Name
+                - textbox "Name" [active] [ref=f10e67]: Users
+              - generic [ref=f10e68]:
+                - generic [ref=f10e69]: Slug
+                - textbox "Slug" [ref=f10e70]: users
+              - generic [ref=f10e71]:
+                - generic [ref=f10e72]: Parent
+                - combobox "Parent" [ref=f10e73]:
+                  - option "Top level" [selected]
+                  - option "Roles"
+                  - option "Menus"
+              - generic [ref=f10e74]:
+                - generic [ref=f10e75]: Icon
+                - combobox "Icon" [ref=f10e76]:
+                  - option "None"
+                  - option "layout-dashboard"
+                  - option "users" [selected]
+                  - option "settings"
+                  - option "menu"
+                  - option "sun"
+                  - option "moon"
+                  - option "log-out"
+                  - option "alert-circle"
+                  - option "chevron-down"
+              - generic [ref=f10e77]:
+                - generic [ref=f10e78]: Route name
+                - textbox "Route name" [ref=f10e79]:
+                  - /placeholder: users.index
+                  - text: users.index
+              - generic [ref=f10e80]:
+                - generic [ref=f10e81]: Sort order
+                - spinbutton "Sort order" [ref=f10e82]: "1"
+            - generic [ref=f10e83]:
+              - checkbox "Active" [checked] [ref=f10e84]
+              - generic [ref=f10e85]: Active
+            - generic [ref=f10e86]:
+              - link "Cancel" [ref=f10e87] [cursor=pointer]:
+                - /url: http://enterprise-system.test/menus
+              - button "Save" [ref=f10e88]

@@ -1,0 +1,45 @@
+- generic [ref=f12e2]:
+  - complementary [ref=f12e3]:
+    - generic [ref=f12e4]: Laravel
+    - navigation [ref=f12e12]:
+      - link "Dashboard" [ref=f12e13] [cursor=pointer]:
+        - /url: http://enterprise-system.test/dashboard
+      - link "Users" [ref=f12e21] [cursor=pointer]:
+        - /url: http://enterprise-system.test/users
+      - link "Roles" [ref=f12e29] [cursor=pointer]:
+        - /url: http://enterprise-system.test/roles
+      - link "Menus" [ref=f12e35] [cursor=pointer]:
+        - /url: http://enterprise-system.test/menus
+  - generic [ref=f12e39]:
+    - banner [ref=f12e40]:
+      - heading "Edit user" [level=1] [ref=f12e42]
+      - button "Toggle theme" [ref=f12e43]
+      - button "A Administrator" [ref=f12e51]:
+        - generic [ref=f12e52]: A
+        - generic [ref=f12e54]: Administrator
+    - main [ref=f12e57]:
+      - generic [ref=f12e58]:
+        - generic [ref=f12e59]:
+          - heading "Edit user" [level=1] [ref=f12e60]
+          - paragraph [ref=f12e61]: Update the account details below.
+        - generic [ref=f12e62]:
+          - generic [ref=f12e63]:
+            - heading "Edit user" [level=3] [ref=f12e64]
+            - paragraph [ref=f12e65]: Update the account details below.
+          - generic [ref=f12e67]:
+            - generic [ref=f12e68]:
+              - generic [ref=f12e69]: Name
+              - textbox "Name" [active] [ref=f12e70]: Administrator
+            - generic [ref=f12e71]:
+              - generic [ref=f12e72]: Email
+              - textbox "Email" [ref=f12e73]: admin@example.com
+            - generic [ref=f12e74]: Password
+            - generic [ref=f12e76]:
+              - generic [ref=f12e77]: Role
+              - combobox "Role" [ref=f12e78]:
+                - option "No role"
+                - option "Admin" [selected]
+            - generic [ref=f12e79]:
+              - link "Cancel" [ref=f12e80] [cursor=pointer]:
+                - /url: http://enterprise-system.test/users
+              - button "Save" [ref=f12e81]
