@@ -121,16 +121,19 @@ class DepartmentsController extends Controller
 
     /**
      * Apply the division and status filters from the query string.
+     *
+     * The list UI allows a single active filter; only the first matching
+     * parameter is applied so stale URLs cannot combine filters.
      */
     protected function applyTableFilters(Builder $query, Request $request): void
     {
         if ($divisionId = $request->query('division_id')) {
             $query->where('departments.division_id', $divisionId);
+
+            return;
         }
 
-        if (in_array($request->query('status'), ['active', 'inactive'], true)) {
-            $query->where('departments.is_active', $request->query('status') === 'active');
-        }
+        $this->applyTableStatusFilter($query, $request, 'departments.is_active');
     }
 
     /**

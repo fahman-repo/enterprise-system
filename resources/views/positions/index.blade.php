@@ -24,34 +24,30 @@
                 ['key' => 'is_active', 'label' => __('Status'), 'sortable' => true],
                 ['key' => 'actions', 'label' => __('Actions'), 'sortable' => false, 'align' => 'right'],
             ];
+
+            $positionFilters = [
+                'department_id' => [
+                    'label' => __('Department'),
+                    'all' => __('All departments'),
+                    'options' => $departments->map(fn ($department) => [
+                        'value' => (string) $department->id,
+                        'label' => $department->name,
+                    ])->values()->all(),
+                ],
+                'status' => [
+                    'label' => __('Status'),
+                    'all' => __('All statuses'),
+                    'options' => [
+                        ['value' => 'active', 'label' => __('Active')],
+                        ['value' => 'inactive', 'label' => __('Inactive')],
+                    ],
+                ],
+            ];
         @endphp
 
-        <x-ui.data-table :columns="$columns" :paginator="$positions" :sort="$sort" :direction="$direction" :empty="__('No positions found.')">
+        <x-ui.data-table :columns="$columns" :paginator="$positions" :sort="$sort" :direction="$direction" :empty="__('No positions found.')" :exclude-params="array_keys($positionFilters)">
             <x-slot:filters>
-                <x-ui.select
-                    name="department_id"
-                    class="w-56"
-                    aria-label="{{ __('Department') }}"
-                    x-data
-                    @change="$el.form.requestSubmit()"
-                >
-                    <option value="">{{ __('All departments') }}</option>
-                    @foreach ($departments as $department)
-                        <option value="{{ $department->id }}" @selected((string) request('department_id') === (string) $department->id)>{{ $department->name }}</option>
-                    @endforeach
-                </x-ui.select>
-
-                <x-ui.select
-                    name="status"
-                    class="w-36"
-                    aria-label="{{ __('Status') }}"
-                    x-data
-                    @change="$el.form.requestSubmit()"
-                >
-                    <option value="">{{ __('All statuses') }}</option>
-                    <option value="active" @selected(request('status') === 'active')>{{ __('Active') }}</option>
-                    <option value="inactive" @selected(request('status') === 'inactive')>{{ __('Inactive') }}</option>
-                </x-ui.select>
+                <x-ui.filter-bar :filters="$positionFilters" />
             </x-slot:filters>
 
             @foreach ($positions as $position)

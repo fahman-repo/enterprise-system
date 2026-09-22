@@ -212,6 +212,9 @@ class EmployeesController extends Controller
 
     /**
      * Apply the placement and status filters from the query string.
+     *
+     * The list UI allows a single active filter; only the first matching
+     * parameter is applied so stale URLs cannot combine filters.
      */
     protected function applyTableFilters(Builder $query, Request $request): void
     {
@@ -227,6 +230,8 @@ class EmployeesController extends Controller
         foreach ($placementFilters as $filter) {
             if ($value = $request->query($filter)) {
                 $query->where('employees.'.$filter, $value);
+
+                return;
             }
         }
 

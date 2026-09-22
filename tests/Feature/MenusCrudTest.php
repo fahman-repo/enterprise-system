@@ -49,6 +49,16 @@ test('menus index lists menus', function () {
         ->assertSee('users');
 });
 
+test('menus index filters by status', function () {
+    $active = Menu::factory()->create(['name' => 'Active Menu', 'slug' => 'active-menu']);
+    $inactive = Menu::factory()->inactive()->create(['name' => 'Inactive Menu', 'slug' => 'inactive-menu']);
+
+    $this->get(route('menus.index', ['status' => 'inactive']))
+        ->assertOk()
+        ->assertSee($inactive->name)
+        ->assertDontSee($active->name);
+});
+
 test('admin can create a menu item', function () {
     $this->post(route('menus.store'), [
         'name' => 'Reports',

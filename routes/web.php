@@ -8,6 +8,7 @@ use App\Http\Controllers\DivisionsController;
 use App\Http\Controllers\EducationLevelsController;
 use App\Http\Controllers\EmployeesController;
 use App\Http\Controllers\EmploymentStatusesController;
+use App\Http\Controllers\EntitiesController;
 use App\Http\Controllers\GradesController;
 use App\Http\Controllers\MaritalStatusesController;
 use App\Http\Controllers\MenusController;
@@ -75,6 +76,21 @@ Route::middleware('auth')->group(function () {
         ->middleware('menu.permission:audit-logs,view')->name('audit-logs.index');
     Route::get('audit-logs/{activity}', [AuditLogController::class, 'show'])
         ->middleware('menu.permission:audit-logs,view')->name('audit-logs.show');
+
+    Route::get('entities', [EntitiesController::class, 'index'])
+        ->middleware('menu.permission:entities,view')->name('entities.index');
+    Route::get('entities/create', [EntitiesController::class, 'create'])
+        ->middleware('menu.permission:entities,create')->name('entities.create');
+    Route::post('entities', [EntitiesController::class, 'store'])
+        ->middleware('menu.permission:entities,create')->name('entities.store');
+    Route::get('entities/{entity}', [EntitiesController::class, 'show'])
+        ->middleware('menu.permission:entities,view')->name('entities.show');
+    Route::get('entities/{entity}/edit', [EntitiesController::class, 'edit'])
+        ->middleware('menu.permission:entities,update')->name('entities.edit');
+    Route::put('entities/{entity}', [EntitiesController::class, 'update'])
+        ->middleware('menu.permission:entities,update')->name('entities.update');
+    Route::delete('entities/{entity}', [EntitiesController::class, 'destroy'])
+        ->middleware('menu.permission:entities,delete')->name('entities.destroy');
 
     Route::get('products', [ProductsController::class, 'index'])
         ->middleware('menu.permission:products,view')->name('products.index');

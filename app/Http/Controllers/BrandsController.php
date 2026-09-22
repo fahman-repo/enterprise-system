@@ -26,6 +26,8 @@ class BrandsController extends Controller
             'description',
         ]);
 
+        $this->applyTableStatusFilter($query, $request);
+
         [$sort, $direction] = $this->applyTableSort($query, [
             'name' => 'name',
             'slug' => 'slug',

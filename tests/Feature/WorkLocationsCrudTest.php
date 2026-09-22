@@ -36,6 +36,16 @@ test('work locations index lists locations', function () {
         ->assertSee('Quixotic Office');
 });
 
+test('work locations index filters by status', function () {
+    $active = WorkLocation::factory()->create(['name' => 'Active Office']);
+    $inactive = WorkLocation::factory()->inactive()->create(['name' => 'Inactive Office']);
+
+    $this->get(route('work-locations.index', ['status' => 'inactive']))
+        ->assertOk()
+        ->assertSee($inactive->name)
+        ->assertDontSee($active->name);
+});
+
 test('admin can create and update a work location', function () {
     $this->post(route('work-locations.store'), [
         'code' => 'LOC-NEW',

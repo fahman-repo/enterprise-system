@@ -3,7 +3,7 @@
         @include('partials.flash')
 
         <x-ui.card>
-            <x-ui.card-content>
+            <x-ui.card-content class="pt-6">
                 <div class="flex flex-wrap items-start justify-between gap-6">
                     <div class="flex items-center gap-4">
                         <x-ui.avatar :name="$employee->name" :src="$employee->photoUrl()" class="size-16" />
@@ -50,46 +50,44 @@
             </x-ui.card-content>
         </x-ui.card>
 
-        <x-ui.card>
-            <x-ui.card-header>
-                <x-ui.card-title>{{ __('Employment') }}</x-ui.card-title>
-            </x-ui.card-header>
-
-            <x-ui.card-content>
-                @php
-                    $employment = [
-                        __('Division') => $employee->division?->name,
-                        __('Department') => $employee->department?->name,
-                        __('Org unit') => $employee->orgUnit?->name,
-                        __('Position') => $employee->position?->name,
-                        __('Grade') => $employee->grade?->name,
-                        __('Work location') => $employee->workLocation?->name,
-                        __('Employment status') => $employee->employmentStatus?->name,
-                        __('Linked user') => $employee->user?->email,
-                        __('Join date') => $employee->join_date?->format('d M Y'),
-                        __('Probation end') => $employee->probation_end_date?->format('d M Y'),
-                        __('End date') => $employee->end_date?->format('d M Y'),
-                    ];
-                @endphp
-
-                <dl class="grid gap-x-6 gap-y-4 sm:grid-cols-2 lg:grid-cols-3">
-                    @foreach ($employment as $label => $value)
-                        <div class="flex flex-col gap-1">
-                            <dt class="text-xs font-medium uppercase tracking-wide text-muted-foreground">{{ $label }}</dt>
-                            <dd class="text-sm">{{ $value ?? __('—') }}</dd>
-                        </div>
-                    @endforeach
-                </dl>
-            </x-ui.card-content>
-        </x-ui.card>
-
-        <div class="grid gap-6 lg:grid-cols-2">
+        <x-ui.tabs default="employment">
             <x-ui.card>
-                <x-ui.card-header>
-                    <x-ui.card-title>{{ __('Personal') }}</x-ui.card-title>
-                </x-ui.card-header>
+                <x-ui.tabs-list class="px-6">
+                    <x-ui.tabs-trigger value="employment">{{ __('Employment') }}</x-ui.tabs-trigger>
+                    <x-ui.tabs-trigger value="personal">{{ __('Personal') }}</x-ui.tabs-trigger>
+                    <x-ui.tabs-trigger value="contact">{{ __('Contact') }}</x-ui.tabs-trigger>
+                    <x-ui.tabs-trigger value="legal">{{ __('Legal & bank') }}</x-ui.tabs-trigger>
+                    <x-ui.tabs-trigger value="emergency">{{ __('Emergency contact') }}</x-ui.tabs-trigger>
+                </x-ui.tabs-list>
 
-                <x-ui.card-content>
+                <x-ui.tabs-content value="employment" class="p-6">
+                    @php
+                        $employment = [
+                            __('Division') => $employee->division?->name,
+                            __('Department') => $employee->department?->name,
+                            __('Org unit') => $employee->orgUnit?->name,
+                            __('Position') => $employee->position?->name,
+                            __('Grade') => $employee->grade?->name,
+                            __('Work location') => $employee->workLocation?->name,
+                            __('Employment status') => $employee->employmentStatus?->name,
+                            __('Linked user') => $employee->user?->email,
+                            __('Join date') => $employee->join_date?->format('d M Y'),
+                            __('Probation end') => $employee->probation_end_date?->format('d M Y'),
+                            __('End date') => $employee->end_date?->format('d M Y'),
+                        ];
+                    @endphp
+
+                    <dl class="grid gap-x-6 gap-y-4 sm:grid-cols-2 lg:grid-cols-3">
+                        @foreach ($employment as $label => $value)
+                            <div class="flex flex-col gap-1">
+                                <dt class="text-xs font-medium uppercase tracking-wide text-muted-foreground">{{ $label }}</dt>
+                                <dd class="text-sm">{{ $value ?? __('—') }}</dd>
+                            </div>
+                        @endforeach
+                    </dl>
+                </x-ui.tabs-content>
+
+                <x-ui.tabs-content value="personal" class="p-6">
                     @php
                         $personal = [
                             __('Gender') => $employee->genderLabel(),
@@ -101,7 +99,7 @@
                         ];
                     @endphp
 
-                    <dl class="grid gap-x-6 gap-y-4 sm:grid-cols-2">
+                    <dl class="grid gap-x-6 gap-y-4 sm:grid-cols-2 lg:grid-cols-3">
                         @foreach ($personal as $label => $value)
                             <div class="flex flex-col gap-1">
                                 <dt class="text-xs font-medium uppercase tracking-wide text-muted-foreground">{{ $label }}</dt>
@@ -109,15 +107,9 @@
                             </div>
                         @endforeach
                     </dl>
-                </x-ui.card-content>
-            </x-ui.card>
+                </x-ui.tabs-content>
 
-            <x-ui.card>
-                <x-ui.card-header>
-                    <x-ui.card-title>{{ __('Contact') }}</x-ui.card-title>
-                </x-ui.card-header>
-
-                <x-ui.card-content>
+                <x-ui.tabs-content value="contact" class="p-6">
                     @php
                         $contact = [
                             __('Email') => $employee->email,
@@ -129,7 +121,7 @@
                         ];
                     @endphp
 
-                    <dl class="grid gap-x-6 gap-y-4 sm:grid-cols-2">
+                    <dl class="grid gap-x-6 gap-y-4 sm:grid-cols-2 lg:grid-cols-3">
                         @foreach ($contact as $label => $value)
                             <div class="flex flex-col gap-1">
                                 <dt class="text-xs font-medium uppercase tracking-wide text-muted-foreground">{{ $label }}</dt>
@@ -137,15 +129,9 @@
                             </div>
                         @endforeach
                     </dl>
-                </x-ui.card-content>
-            </x-ui.card>
+                </x-ui.tabs-content>
 
-            <x-ui.card>
-                <x-ui.card-header>
-                    <x-ui.card-title>{{ __('Legal & bank') }}</x-ui.card-title>
-                </x-ui.card-header>
-
-                <x-ui.card-content>
+                <x-ui.tabs-content value="legal" class="p-6">
                     @php
                         $legal = [
                             __('Identity number') => $employee->identity_number,
@@ -158,7 +144,7 @@
                         ];
                     @endphp
 
-                    <dl class="grid gap-x-6 gap-y-4 sm:grid-cols-2">
+                    <dl class="grid gap-x-6 gap-y-4 sm:grid-cols-2 lg:grid-cols-3">
                         @foreach ($legal as $label => $value)
                             <div class="flex flex-col gap-1">
                                 <dt class="text-xs font-medium uppercase tracking-wide text-muted-foreground">{{ $label }}</dt>
@@ -166,15 +152,9 @@
                             </div>
                         @endforeach
                     </dl>
-                </x-ui.card-content>
-            </x-ui.card>
+                </x-ui.tabs-content>
 
-            <x-ui.card>
-                <x-ui.card-header>
-                    <x-ui.card-title>{{ __('Emergency contact') }}</x-ui.card-title>
-                </x-ui.card-header>
-
-                <x-ui.card-content>
+                <x-ui.tabs-content value="emergency" class="p-6">
                     @php
                         $emergency = [
                             __('Name') => $employee->emergency_contact_name,
@@ -183,7 +163,7 @@
                         ];
                     @endphp
 
-                    <dl class="grid gap-x-6 gap-y-4 sm:grid-cols-2">
+                    <dl class="grid gap-x-6 gap-y-4 sm:grid-cols-2 lg:grid-cols-3">
                         @foreach ($emergency as $label => $value)
                             <div class="flex flex-col gap-1">
                                 <dt class="text-xs font-medium uppercase tracking-wide text-muted-foreground">{{ $label }}</dt>
@@ -191,8 +171,8 @@
                             </div>
                         @endforeach
                     </dl>
-                </x-ui.card-content>
+                </x-ui.tabs-content>
             </x-ui.card>
-        </div>
+        </x-ui.tabs>
     </div>
 </x-app-layout>

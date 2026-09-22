@@ -46,6 +46,16 @@ test('divisions index search matches code and name', function () {
         ->assertDontSee($unmatched->name);
 });
 
+test('divisions index filters by status', function () {
+    $active = Division::factory()->create(['name' => 'Active Division']);
+    $inactive = Division::factory()->inactive()->create(['name' => 'Inactive Division']);
+
+    $this->get(route('divisions.index', ['status' => 'inactive']))
+        ->assertOk()
+        ->assertSee($inactive->name)
+        ->assertDontSee($active->name);
+});
+
 test('admin can create and update a division', function () {
     $this->post(route('divisions.store'), [
         'code' => 'DIV-NEW',

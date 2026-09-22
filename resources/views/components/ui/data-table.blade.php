@@ -6,13 +6,14 @@
     'searchPlaceholder' => __('Search…'),
     'empty' => __('No results found.'),
     'perPageOptions' => [10, 25, 50, 100],
+    'excludeParams' => [],
 ])
 
 @php
     $colspan = count($columns);
     $sortKey = $sort ?? request('sort');
     $sortDirection = ($direction ?? request('direction', 'asc')) === 'desc' ? 'desc' : 'asc';
-    $hiddenInputs = collect(request()->query())->except(['search', 'per_page', 'page']);
+    $hiddenInputs = collect(request()->query())->except(array_merge(['search', 'per_page', 'page'], $excludeParams));
     $showing = $paginator->total() > 0 && $paginator->firstItem() !== null
         ? __('Showing :first–:last of :total', [
             'first' => number_format((int) $paginator->firstItem()),

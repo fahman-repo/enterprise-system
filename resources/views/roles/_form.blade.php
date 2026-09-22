@@ -29,6 +29,12 @@
                 </div>
             </div>
 
+            <label class="flex items-center gap-2 text-sm">
+                <input type="hidden" name="is_active" value="0">
+                <x-ui.checkbox name="is_active" value="1" :checked="(bool) old('is_active', $role?->is_active ?? true)" />
+                {{ __('Active') }}
+            </label>
+
             <div class="flex flex-col gap-3">
                 <div class="flex flex-col gap-1">
                     <x-ui.label>{{ __('Permissions') }}</x-ui.label>

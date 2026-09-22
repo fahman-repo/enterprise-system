@@ -31,6 +31,8 @@ class CategoriesController extends Controller
             'parents.name',
         ]);
 
+        $this->applyTableStatusFilter($query, $request, 'categories.is_active');
+
         [$sort, $direction] = $this->applyTableSort($query, [
             'name' => 'categories.name',
             'slug' => 'categories.slug',

@@ -62,6 +62,27 @@ test('departments index filters by division', function () {
         ->assertDontSee($other->name);
 });
 
+test('departments index filters by status', function () {
+    $active = Department::factory()->create(['name' => 'Active Department']);
+    $inactive = Department::factory()->inactive()->create(['name' => 'Inactive Department']);
+
+    $this->get(route('departments.index', ['status' => 'inactive']))
+        ->assertOk()
+        ->assertSee($inactive->name)
+        ->assertDontSee($active->name);
+});
+
+test('departments index ignores status when a division filter is applied', function () {
+    $division = Division::factory()->create();
+    $department = Department::factory()->forDivision($division)->create(['name' => 'In First Division']);
+    $inactive = Department::factory()->inactive()->create(['name' => 'Inactive Elsewhere']);
+
+    $this->get(route('departments.index', ['division_id' => $division->id, 'status' => 'inactive']))
+        ->assertOk()
+        ->assertSee($department->name)
+        ->assertDontSee($inactive->name);
+});
+
 test('admin can create and update a department', function () {
     $division = Division::factory()->create();
 

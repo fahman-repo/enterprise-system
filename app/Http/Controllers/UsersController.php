@@ -31,10 +31,13 @@ class UsersController extends Controller
             'roles.name',
         ]);
 
+        $this->applyTableStatusFilter($query, $request, 'users.is_active');
+
         [$sort, $direction] = $this->applyTableSort($query, [
             'name' => 'users.name',
             'email' => 'users.email',
             'role' => 'roles.name',
+            'is_active' => 'users.is_active',
         ], $request->query('sort'), $request->query('direction'), 'name');
 
         $users = $query->paginate($this->tablePerPage($request))->withQueryString();
@@ -121,11 +124,14 @@ class UsersController extends Controller
                 ? ['required', 'string', 'min:8']
                 : ['nullable', 'string', 'min:8'],
             'role_id' => ['nullable', Rule::exists('roles', 'id')],
+            'is_active' => ['nullable', 'boolean'],
         ]);
 
         if (blank($data['password'] ?? null)) {
             unset($data['password']);
         }
+
+        $data['is_active'] = $request->boolean('is_active');
 
         return $data;
     }

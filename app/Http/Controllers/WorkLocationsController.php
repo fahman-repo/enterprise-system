@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\Concerns\InteractsWithDataTable;
 use App\Models\WorkLocation;
-use Illuminate\Contracts\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -29,7 +28,7 @@ class WorkLocationsController extends Controller
             'province',
         ]);
 
-        $this->applyTableFilters($query, $request);
+        $this->applyTableStatusFilter($query, $request);
 
         [$sort, $direction] = $this->applyTableSort($query, [
             'code' => 'code',
@@ -93,16 +92,6 @@ class WorkLocationsController extends Controller
         $workLocation->delete();
 
         return redirect()->route('work-locations.index')->with('status', __('Work location deleted.'));
-    }
-
-    /**
-     * Apply the status filter from the query string.
-     */
-    protected function applyTableFilters(Builder $query, Request $request): void
-    {
-        if (in_array($request->query('status'), ['active', 'inactive'], true)) {
-            $query->where('is_active', $request->query('status') === 'active');
-        }
     }
 
     /**

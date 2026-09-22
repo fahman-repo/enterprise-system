@@ -23,9 +23,23 @@
                 ['key' => 'is_active', 'label' => __('Status'), 'sortable' => true],
                 ['key' => 'actions', 'label' => __('Actions'), 'sortable' => false, 'align' => 'right'],
             ];
+
+            $brandFilters = [
+                'status' => [
+                    'label' => __('Status'),
+                    'all' => __('All statuses'),
+                    'options' => [
+                        ['value' => 'active', 'label' => __('Active')],
+                        ['value' => 'inactive', 'label' => __('Inactive')],
+                    ],
+                ],
+            ];
         @endphp
 
-        <x-ui.data-table :columns="$columns" :paginator="$brands" :sort="$sort" :direction="$direction" :empty="__('No brands found.')">
+        <x-ui.data-table :columns="$columns" :paginator="$brands" :sort="$sort" :direction="$direction" :empty="__('No brands found.')" :exclude-params="array_keys($brandFilters)">
+            <x-slot:filters>
+                <x-ui.filter-bar :filters="$brandFilters" />
+            </x-slot:filters>
             @foreach ($brands as $brand)
                 <tr class="hover:bg-accent/50">
                     <td class="px-4 py-3 font-medium">{{ $brand->name }}</td>

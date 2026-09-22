@@ -24,9 +24,23 @@
                 ['key' => 'is_active', 'label' => __('Status'), 'sortable' => true],
                 ['key' => 'actions', 'label' => __('Actions'), 'sortable' => false, 'align' => 'right'],
             ];
+
+            $educationLevelFilters = [
+                'status' => [
+                    'label' => __('Status'),
+                    'all' => __('All statuses'),
+                    'options' => [
+                        ['value' => 'active', 'label' => __('Active')],
+                        ['value' => 'inactive', 'label' => __('Inactive')],
+                    ],
+                ],
+            ];
         @endphp
 
-        <x-ui.data-table :columns="$columns" :paginator="$educationLevels" :sort="$sort" :direction="$direction" :empty="__('No education levels found.')">
+        <x-ui.data-table :columns="$columns" :paginator="$educationLevels" :sort="$sort" :direction="$direction" :empty="__('No education levels found.')" :exclude-params="array_keys($educationLevelFilters)">
+            <x-slot:filters>
+                <x-ui.filter-bar :filters="$educationLevelFilters" />
+            </x-slot:filters>
             @foreach ($educationLevels as $educationLevel)
                 <tr class="hover:bg-accent/50">
                     <td class="px-4 py-3 font-medium">{{ $educationLevel->name }}</td>

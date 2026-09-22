@@ -25,9 +25,23 @@
                 ['key' => 'is_active', 'label' => __('Status'), 'sortable' => true],
                 ['key' => 'actions', 'label' => __('Actions'), 'sortable' => false, 'align' => 'right'],
             ];
+
+            $menuFilters = [
+                'status' => [
+                    'label' => __('Status'),
+                    'all' => __('All statuses'),
+                    'options' => [
+                        ['value' => 'active', 'label' => __('Active')],
+                        ['value' => 'inactive', 'label' => __('Inactive')],
+                    ],
+                ],
+            ];
         @endphp
 
-        <x-ui.data-table :columns="$columns" :paginator="$menus" :sort="$sort" :direction="$direction" :empty="__('No menus found.')">
+        <x-ui.data-table :columns="$columns" :paginator="$menus" :sort="$sort" :direction="$direction" :empty="__('No menus found.')" :exclude-params="array_keys($menuFilters)">
+            <x-slot:filters>
+                <x-ui.filter-bar :filters="$menuFilters" />
+            </x-slot:filters>
             @foreach ($menus as $menu)
                 <tr class="hover:bg-accent/50">
                     <td class="px-4 py-3 font-medium">

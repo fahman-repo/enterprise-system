@@ -26,10 +26,13 @@ class RolesController extends Controller
             'roles.slug',
         ]);
 
+        $this->applyTableStatusFilter($query, $request, 'roles.is_active');
+
         [$sort, $direction] = $this->applyTableSort($query, [
             'name' => 'roles.name',
             'slug' => 'roles.slug',
             'users_count' => 'users_count',
+            'is_active' => 'roles.is_active',
         ], $request->query('sort'), $request->query('direction'), 'name');
 
         $roles = $query->paginate($this->tablePerPage($request))->withQueryString();
@@ -55,7 +58,10 @@ class RolesController extends Controller
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255', 'unique:roles,name'],
             'slug' => ['required', 'string', 'max:255', 'alpha_dash', 'unique:roles,slug'],
+            'is_active' => ['nullable', 'boolean'],
         ]);
+
+        $data['is_active'] = $request->boolean('is_active');
 
         app(Role::class)->withPermissions($data, $this->permissionsFrom($request));
 
@@ -83,7 +89,10 @@ class RolesController extends Controller
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255', Rule::unique('roles', 'name')->ignore($role->id)],
             'slug' => ['required', 'string', 'max:255', 'alpha_dash', Rule::unique('roles', 'slug')->ignore($role->id)],
+            'is_active' => ['nullable', 'boolean'],
         ]);
+
+        $data['is_active'] = $request->boolean('is_active');
 
         $permissions = $this->permissionsFrom($request);
 

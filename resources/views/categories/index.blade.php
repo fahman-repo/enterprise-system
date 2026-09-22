@@ -25,9 +25,23 @@
                 ['key' => 'is_active', 'label' => __('Status'), 'sortable' => true],
                 ['key' => 'actions', 'label' => __('Actions'), 'sortable' => false, 'align' => 'right'],
             ];
+
+            $categoryFilters = [
+                'status' => [
+                    'label' => __('Status'),
+                    'all' => __('All statuses'),
+                    'options' => [
+                        ['value' => 'active', 'label' => __('Active')],
+                        ['value' => 'inactive', 'label' => __('Inactive')],
+                    ],
+                ],
+            ];
         @endphp
 
-        <x-ui.data-table :columns="$columns" :paginator="$categories" :sort="$sort" :direction="$direction" :empty="__('No categories found.')">
+        <x-ui.data-table :columns="$columns" :paginator="$categories" :sort="$sort" :direction="$direction" :empty="__('No categories found.')" :exclude-params="array_keys($categoryFilters)">
+            <x-slot:filters>
+                <x-ui.filter-bar :filters="$categoryFilters" />
+            </x-slot:filters>
             @foreach ($categories as $category)
                 <tr class="hover:bg-accent/50">
                     <td class="px-4 py-3 font-medium">{{ $category->name }}</td>

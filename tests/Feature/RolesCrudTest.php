@@ -35,12 +35,23 @@ test('roles index lists roles', function () {
     $this->get(route('roles.index'))->assertOk()->assertSee($this->adminRole->name);
 });
 
+test('roles index filters by status', function () {
+    $active = Role::factory()->create(['name' => 'Active Role', 'slug' => 'active-role']);
+    $inactive = Role::factory()->inactive()->create(['name' => 'Inactive Role', 'slug' => 'inactive-role']);
+
+    $this->get(route('roles.index', ['status' => 'inactive']))
+        ->assertOk()
+        ->assertSee($inactive->name)
+        ->assertDontSee($active->name);
+});
+
 test('admin can create a role with a permission matrix', function () {
     $menus = Menu::all();
 
     $payload = [
         'name' => 'Editor',
         'slug' => 'editor',
+        'is_active' => '1',
         'permissions' => [
             $menus->firstWhere('slug', 'users')->id => ['can_view' => '1', 'can_create' => '1'],
         ],
@@ -54,7 +65,8 @@ test('admin can create a role with a permission matrix', function () {
     expect((bool) $pivot->can_view)->toBeTrue()
         ->and((bool) $pivot->can_create)->toBeTrue()
         ->and((bool) $pivot->can_update)->toBeFalse()
-        ->and($role->menus)->toHaveCount(1);
+        ->and($role->menus)->toHaveCount(1)
+        ->and($role->is_active)->toBeTrue();
 });
 
 test('saving the matrix updates pivot flags and flushes cache', function () {
@@ -65,13 +77,15 @@ test('saving the matrix updates pivot flags and flushes cache', function () {
     $this->put(route('roles.update', $viewerRole), [
         'name' => $viewerRole->name,
         'slug' => $viewerRole->slug,
+        'is_active' => '1',
         'permissions' => [
             $usersMenu->id => ['can_view' => '1'],
         ],
     ])->assertRedirect(route('roles.index'));
 
     expect(app(PermissionService::class)->can($viewerRole->id, 'users', 'view'))->toBeTrue()
-        ->and(app(PermissionService::class)->can($viewerRole->id, 'users', 'update'))->toBeFalse();
+        ->and(app(PermissionService::class)->can($viewerRole->id, 'users', 'update'))->toBeFalse()
+        ->and($viewerRole->fresh()->is_active)->toBeTrue();
 });
 
 test('cannot save own role matrix removing own update access', function () {
@@ -194,7 +208,7 @@ test('roles index marks the applied sort with a direction indicator', function (
     $table = Str::between($this->get(route('roles.index'))->assertOk()->getContent(), '<table', '</table>');
 
     expect($table)->toMatch('/aria-sort="ascending"[^>]*>\s*<a[^>]*>\s*Name/')
-        ->and(substr_count($table, 'aria-sort="none"'))->toBe(2)
+        ->and(substr_count($table, 'aria-sort="none"'))->toBe(3)
         ->and(substr_count($table, 'm6 9 6 6 6-6'))->toBe(1)
         ->and(substr_count($table, 'rotate-180'))->toBe(1)
         ->and($table)->toContain('direction=desc');

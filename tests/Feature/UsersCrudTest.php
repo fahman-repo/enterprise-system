@@ -37,6 +37,16 @@ test('users index lists users', function () {
         ->assertSee($this->admin->email);
 });
 
+test('users index filters by status', function () {
+    $active = User::factory()->create(['name' => 'Active Person', 'email' => 'active-person@example.com']);
+    $inactive = User::factory()->inactive()->create(['name' => 'Dormant Person', 'email' => 'dormant-person@example.com']);
+
+    $this->get(route('users.index', ['status' => 'inactive']))
+        ->assertOk()
+        ->assertSee($inactive->email)
+        ->assertDontSee($active->email);
+});
+
 test('admin can create a user', function () {
     $role = Role::factory()->create();
 
@@ -45,9 +55,10 @@ test('admin can create a user', function () {
         'email' => 'jane@example.com',
         'password' => 'super-secret',
         'role_id' => $role->id,
+        'is_active' => '1',
     ])->assertRedirect(route('users.index'));
 
-    $this->assertDatabaseHas('users', ['email' => 'jane@example.com', 'role_id' => $role->id]);
+    $this->assertDatabaseHas('users', ['email' => 'jane@example.com', 'role_id' => $role->id, 'is_active' => true]);
 });
 
 test('admin can update a user without changing the password', function () {
@@ -58,10 +69,12 @@ test('admin can update a user without changing the password', function () {
         'name' => 'Renamed',
         'email' => $user->email,
         'role_id' => $this->admin->role_id,
+        'is_active' => '0',
     ])->assertRedirect(route('users.index'));
 
     expect($user->fresh()->name)->toBe('Renamed')
-        ->and($user->fresh()->password)->toBe($oldHash);
+        ->and($user->fresh()->password)->toBe($oldHash)
+        ->and($user->fresh()->is_active)->toBeFalse();
 });
 
 test('admin cannot delete own account', function () {
@@ -218,7 +231,7 @@ test('users index marks the applied sort with a direction indicator', function (
     $table = Str::between($this->get(route('users.index'))->assertOk()->getContent(), '<table', '</table>');
 
     expect($table)->toMatch('/aria-sort="ascending"[^>]*>\s*<a[^>]*>\s*Name/')
-        ->and(substr_count($table, 'aria-sort="none"'))->toBe(2)
+        ->and(substr_count($table, 'aria-sort="none"'))->toBe(3)
         ->and(substr_count($table, 'm6 9 6 6 6-6'))->toBe(1)
         ->and(substr_count($table, 'rotate-180'))->toBe(1)
         ->and($table)->toContain('direction=desc');
@@ -229,7 +242,7 @@ test('users index marks the applied sort with a direction indicator', function (
     );
 
     expect($table)->toMatch('/aria-sort="descending"[^>]*>\s*<a[^>]*>\s*Email/')
-        ->and(substr_count($table, 'aria-sort="none"'))->toBe(2)
+        ->and(substr_count($table, 'aria-sort="none"'))->toBe(3)
         ->and(substr_count($table, 'm6 9 6 6 6-6'))->toBe(1)
         ->and(substr_count($table, 'rotate-180'))->toBe(0);
 });

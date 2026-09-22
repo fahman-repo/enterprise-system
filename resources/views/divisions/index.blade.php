@@ -23,9 +23,23 @@
                 ['key' => 'is_active', 'label' => __('Status'), 'sortable' => true],
                 ['key' => 'actions', 'label' => __('Actions'), 'sortable' => false, 'align' => 'right'],
             ];
+
+            $divisionFilters = [
+                'status' => [
+                    'label' => __('Status'),
+                    'all' => __('All statuses'),
+                    'options' => [
+                        ['value' => 'active', 'label' => __('Active')],
+                        ['value' => 'inactive', 'label' => __('Inactive')],
+                    ],
+                ],
+            ];
         @endphp
 
-        <x-ui.data-table :columns="$columns" :paginator="$divisions" :sort="$sort" :direction="$direction" :empty="__('No divisions found.')">
+        <x-ui.data-table :columns="$columns" :paginator="$divisions" :sort="$sort" :direction="$direction" :empty="__('No divisions found.')" :exclude-params="array_keys($divisionFilters)">
+            <x-slot:filters>
+                <x-ui.filter-bar :filters="$divisionFilters" />
+            </x-slot:filters>
             @foreach ($divisions as $division)
                 <tr class="hover:bg-accent/50">
                     <td class="px-4 py-3 font-mono text-xs text-muted-foreground">{{ $division->code }}</td>

@@ -23,9 +23,23 @@
                 ['key' => 'is_active', 'label' => __('Status'), 'sortable' => true],
                 ['key' => 'actions', 'label' => __('Actions'), 'sortable' => false, 'align' => 'right'],
             ];
+
+            $religionFilters = [
+                'status' => [
+                    'label' => __('Status'),
+                    'all' => __('All statuses'),
+                    'options' => [
+                        ['value' => 'active', 'label' => __('Active')],
+                        ['value' => 'inactive', 'label' => __('Inactive')],
+                    ],
+                ],
+            ];
         @endphp
 
-        <x-ui.data-table :columns="$columns" :paginator="$religions" :sort="$sort" :direction="$direction" :empty="__('No religions found.')">
+        <x-ui.data-table :columns="$columns" :paginator="$religions" :sort="$sort" :direction="$direction" :empty="__('No religions found.')" :exclude-params="array_keys($religionFilters)">
+            <x-slot:filters>
+                <x-ui.filter-bar :filters="$religionFilters" />
+            </x-slot:filters>
             @foreach ($religions as $religion)
                 <tr class="hover:bg-accent/50">
                     <td class="px-4 py-3 font-medium">{{ $religion->name }}</td>

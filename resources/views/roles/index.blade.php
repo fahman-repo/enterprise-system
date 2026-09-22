@@ -20,16 +20,39 @@
                 ['key' => 'name', 'label' => __('Name'), 'sortable' => true],
                 ['key' => 'slug', 'label' => __('Slug'), 'sortable' => true],
                 ['key' => 'users_count', 'label' => __('Users'), 'sortable' => true],
+                ['key' => 'is_active', 'label' => __('Status'), 'sortable' => true],
                 ['key' => 'actions', 'label' => __('Actions'), 'sortable' => false, 'align' => 'right'],
+            ];
+
+            $roleFilters = [
+                'status' => [
+                    'label' => __('Status'),
+                    'all' => __('All statuses'),
+                    'options' => [
+                        ['value' => 'active', 'label' => __('Active')],
+                        ['value' => 'inactive', 'label' => __('Inactive')],
+                    ],
+                ],
             ];
         @endphp
 
-        <x-ui.data-table :columns="$columns" :paginator="$roles" :sort="$sort" :direction="$direction" :empty="__('No roles found.')">
+        <x-ui.data-table :columns="$columns" :paginator="$roles" :sort="$sort" :direction="$direction" :empty="__('No roles found.')" :exclude-params="array_keys($roleFilters)">
+            <x-slot:filters>
+                <x-ui.filter-bar :filters="$roleFilters" />
+            </x-slot:filters>
+
             @foreach ($roles as $role)
                 <tr class="hover:bg-accent/50">
                     <td class="px-4 py-3 font-medium">{{ $role->name }}</td>
                     <td class="px-4 py-3 text-muted-foreground">{{ $role->slug }}</td>
                     <td class="px-4 py-3 text-muted-foreground">{{ $role->users_count }}</td>
+                    <td class="px-4 py-3">
+                        @if ($role->is_active)
+                            <x-ui.badge variant="success">{{ __('Active') }}</x-ui.badge>
+                        @else
+                            <x-ui.badge variant="muted">{{ __('Inactive') }}</x-ui.badge>
+                        @endif
+                    </td>
                     <td class="px-4 py-3">
                         <div class="flex justify-end gap-2">
                             @can('roles.update')

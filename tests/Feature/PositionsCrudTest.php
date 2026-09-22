@@ -50,6 +50,38 @@ test('positions index search matches name and department', function () {
         ->assertDontSee($unmatched->name);
 });
 
+test('positions index filters by department', function () {
+    $department = Department::factory()->create();
+    $position = Position::factory()->forDepartment($department)->create();
+    $other = Position::factory()->create();
+
+    $this->get(route('positions.index', ['department_id' => $department->id]))
+        ->assertOk()
+        ->assertSee($position->name)
+        ->assertDontSee($other->name);
+});
+
+test('positions index filters by status', function () {
+    $active = Position::factory()->create(['name' => 'Active Position']);
+    $inactive = Position::factory()->inactive()->create(['name' => 'Inactive Position']);
+
+    $this->get(route('positions.index', ['status' => 'inactive']))
+        ->assertOk()
+        ->assertSee($inactive->name)
+        ->assertDontSee($active->name);
+});
+
+test('positions index ignores status when a department filter is applied', function () {
+    $department = Department::factory()->create();
+    $position = Position::factory()->forDepartment($department)->create(['name' => 'In First Department']);
+    $inactive = Position::factory()->inactive()->create(['name' => 'Inactive Elsewhere']);
+
+    $this->get(route('positions.index', ['department_id' => $department->id, 'status' => 'inactive']))
+        ->assertOk()
+        ->assertSee($position->name)
+        ->assertDontSee($inactive->name);
+});
+
 test('admin can create and update a position', function () {
     $department = Department::factory()->create();
 

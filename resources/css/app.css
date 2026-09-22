@@ -132,4 +132,8 @@
     body {
         @apply bg-background text-foreground;
     }
+
+    [x-cloak] {
+        display: none !important;
+    }
 }

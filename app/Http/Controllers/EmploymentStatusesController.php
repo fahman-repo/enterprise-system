@@ -26,6 +26,8 @@ class EmploymentStatusesController extends Controller
             'description',
         ]);
 
+        $this->applyTableStatusFilter($query, $request);
+
         [$sort, $direction] = $this->applyTableSort($query, [
             'code' => 'code',
             'name' => 'name',

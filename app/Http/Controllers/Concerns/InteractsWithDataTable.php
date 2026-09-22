@@ -48,6 +48,16 @@ trait InteractsWithDataTable
     }
 
     /**
+     * Apply the active/inactive status filter from the query string.
+     */
+    protected function applyTableStatusFilter(Builder $query, Request $request, string $column = 'is_active'): void
+    {
+        if (in_array($request->query('status'), ['active', 'inactive'], true)) {
+            $query->where($column, $request->query('status') === 'active');
+        }
+    }
+
+    /**
      * Apply sorting from an allowlist of sort keys to qualified columns.
      *
      * When no valid key is requested the default key is applied first, followed

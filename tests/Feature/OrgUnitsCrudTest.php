@@ -60,6 +60,27 @@ test('org units index filters by department', function () {
         ->assertDontSee($other->name);
 });
 
+test('org units index filters by status', function () {
+    $active = OrgUnit::factory()->create(['name' => 'Active Unit']);
+    $inactive = OrgUnit::factory()->inactive()->create(['name' => 'Inactive Unit']);
+
+    $this->get(route('org-units.index', ['status' => 'inactive']))
+        ->assertOk()
+        ->assertSee($inactive->name)
+        ->assertDontSee($active->name);
+});
+
+test('org units index ignores status when a department filter is applied', function () {
+    $department = Department::factory()->create();
+    $unit = OrgUnit::factory()->forDepartment($department)->create(['name' => 'In First Department']);
+    $inactive = OrgUnit::factory()->inactive()->create(['name' => 'Inactive Elsewhere']);
+
+    $this->get(route('org-units.index', ['department_id' => $department->id, 'status' => 'inactive']))
+        ->assertOk()
+        ->assertSee($unit->name)
+        ->assertDontSee($inactive->name);
+});
+
 test('admin can create and update an org unit', function () {
     $department = Department::factory()->create();
 

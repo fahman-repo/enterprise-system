@@ -24,9 +24,23 @@
                 ['key' => 'is_active', 'label' => __('Status'), 'sortable' => true],
                 ['key' => 'actions', 'label' => __('Actions'), 'sortable' => false, 'align' => 'right'],
             ];
+
+            $statusFilters = [
+                'status' => [
+                    'label' => __('Status'),
+                    'all' => __('All statuses'),
+                    'options' => [
+                        ['value' => 'active', 'label' => __('Active')],
+                        ['value' => 'inactive', 'label' => __('Inactive')],
+                    ],
+                ],
+            ];
         @endphp
 
-        <x-ui.data-table :columns="$columns" :paginator="$statuses" :sort="$sort" :direction="$direction" :empty="__('No employment statuses found.')">
+        <x-ui.data-table :columns="$columns" :paginator="$statuses" :sort="$sort" :direction="$direction" :empty="__('No employment statuses found.')" :exclude-params="array_keys($statusFilters)">
+            <x-slot:filters>
+                <x-ui.filter-bar :filters="$statusFilters" />
+            </x-slot:filters>
             @foreach ($statuses as $status)
                 <tr class="hover:bg-accent/50">
                     <td class="px-4 py-3 font-mono text-xs text-muted-foreground">{{ $status->code }}</td>

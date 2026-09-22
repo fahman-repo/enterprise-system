@@ -117,6 +117,35 @@ test('employees index filters by department and status', function () {
         ->assertDontSee($inDepartment->name);
 });
 
+test('employees index ignores status when a placement filter is applied', function () {
+    $division = Division::factory()->create();
+    $department = Department::factory()->forDivision($division)->create();
+    $placed = Employee::factory()->forDepartment($department)->create(['name' => 'Active In Division']);
+    $inactive = Employee::factory()->inactive()->create(['name' => 'Inactive Elsewhere']);
+
+    $this->get(route('employees.index', ['division_id' => $division->id, 'status' => 'inactive']))
+        ->assertOk()
+        ->assertSee($placed->name)
+        ->assertDontSee($inactive->name);
+});
+
+test('employees index applies only the first placement filter', function () {
+    $division = Division::factory()->create();
+    $department = Department::factory()->forDivision($division)->create();
+    $inDivision = Employee::factory()->forDepartment($department)->create(['name' => 'In First Division']);
+
+    $otherDepartment = Department::factory()->create();
+    $inOtherDepartment = Employee::factory()->forDepartment($otherDepartment)->create(['name' => 'In Other Department']);
+
+    $this->get(route('employees.index', [
+        'division_id' => $division->id,
+        'department_id' => $otherDepartment->id,
+    ]))
+        ->assertOk()
+        ->assertSee($inDivision->name)
+        ->assertDontSee($inOtherDepartment->name);
+});
+
 test('admin can create an employee and the number is generated', function () {
     $this->post(route('employees.store'), employeePayload())
         ->assertRedirect(route('employees.index'));

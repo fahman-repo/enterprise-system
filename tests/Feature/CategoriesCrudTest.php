@@ -55,6 +55,16 @@ test('categories index search matches name, slug and parent name', function () {
         ->assertSee($child->name);
 });
 
+test('categories index filters by status', function () {
+    $active = Category::factory()->create(['name' => 'Active Category']);
+    $inactive = Category::factory()->inactive()->create(['name' => 'Inactive Category']);
+
+    $this->get(route('categories.index', ['status' => 'inactive']))
+        ->assertOk()
+        ->assertSee($inactive->name)
+        ->assertDontSee($active->name);
+});
+
 test('admin can create a category', function () {
     $parent = Category::factory()->create();
 

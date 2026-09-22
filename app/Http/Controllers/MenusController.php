@@ -32,6 +32,8 @@ class MenusController extends Controller
             'parents.name',
         ]);
 
+        $this->applyTableStatusFilter($query, $request, 'menus.is_active');
+
         [$sort, $direction] = $this->applyTableSort($query, [
             'name' => 'menus.name',
             'slug' => 'menus.slug',

@@ -36,6 +36,16 @@ test('grades index lists grades', function () {
         ->assertSee('Quixotic Grade');
 });
 
+test('grades index filters by status', function () {
+    $active = Grade::factory()->create(['name' => 'Active Grade']);
+    $inactive = Grade::factory()->inactive()->create(['name' => 'Inactive Grade']);
+
+    $this->get(route('grades.index', ['status' => 'inactive']))
+        ->assertOk()
+        ->assertSee($inactive->name)
+        ->assertDontSee($active->name);
+});
+
 test('admin can create and update a grade', function () {
     $this->post(route('grades.store'), [
         'name' => 'New Grade',

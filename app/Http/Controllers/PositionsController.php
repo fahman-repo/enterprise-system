@@ -120,16 +120,19 @@ class PositionsController extends Controller
 
     /**
      * Apply the department and status filters from the query string.
+     *
+     * The list UI allows a single active filter; only the first matching
+     * parameter is applied so stale URLs cannot combine filters.
      */
     protected function applyTableFilters(Builder $query, Request $request): void
     {
         if ($departmentId = $request->query('department_id')) {
             $query->where('positions.department_id', $departmentId);
+
+            return;
         }
 
-        if (in_array($request->query('status'), ['active', 'inactive'], true)) {
-            $query->where('positions.is_active', $request->query('status') === 'active');
-        }
+        $this->applyTableStatusFilter($query, $request, 'positions.is_active');
     }
 
     /**

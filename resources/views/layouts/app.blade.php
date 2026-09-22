@@ -25,7 +25,7 @@
                     <span class="text-sm font-semibold tracking-tight">{{ config('app.name', 'Laravel') }}</span>
                 </div>
 
-                <nav class="flex flex-1 flex-col gap-1 p-3">
+                <nav class="flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto p-3 scrollbar-thin scrollbar-track-transparent scrollbar-thumb-muted-foreground/40">
                     <x-ui.sidebar-link href="{{ route('dashboard') }}" :active="request()->routeIs('dashboard')">
                         <x-slot:icon>
                             <x-icon.layout-dashboard />

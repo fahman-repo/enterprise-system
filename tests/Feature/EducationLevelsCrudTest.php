@@ -36,6 +36,16 @@ test('education levels index lists levels', function () {
         ->assertSee('Quixotic Studies');
 });
 
+test('education levels index filters by status', function () {
+    $active = EducationLevel::factory()->create(['name' => 'Active Education Level']);
+    $inactive = EducationLevel::factory()->inactive()->create(['name' => 'Inactive Education Level']);
+
+    $this->get(route('education-levels.index', ['status' => 'inactive']))
+        ->assertOk()
+        ->assertSee($inactive->name)
+        ->assertDontSee($active->name);
+});
+
 test('admin can create and update an education level', function () {
     $this->post(route('education-levels.store'), [
         'name' => 'New Level',

@@ -23,9 +23,23 @@
                 ['key' => 'is_active', 'label' => __('Status'), 'sortable' => true],
                 ['key' => 'actions', 'label' => __('Actions'), 'sortable' => false, 'align' => 'right'],
             ];
+
+            $gradeFilters = [
+                'status' => [
+                    'label' => __('Status'),
+                    'all' => __('All statuses'),
+                    'options' => [
+                        ['value' => 'active', 'label' => __('Active')],
+                        ['value' => 'inactive', 'label' => __('Inactive')],
+                    ],
+                ],
+            ];
         @endphp
 
-        <x-ui.data-table :columns="$columns" :paginator="$grades" :sort="$sort" :direction="$direction" :empty="__('No grades found.')">
+        <x-ui.data-table :columns="$columns" :paginator="$grades" :sort="$sort" :direction="$direction" :empty="__('No grades found.')" :exclude-params="array_keys($gradeFilters)">
+            <x-slot:filters>
+                <x-ui.filter-bar :filters="$gradeFilters" />
+            </x-slot:filters>
             @foreach ($grades as $grade)
                 <tr class="hover:bg-accent/50">
                     <td class="px-4 py-3 font-medium">{{ $grade->name }}</td>

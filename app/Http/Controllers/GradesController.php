@@ -25,6 +25,8 @@ class GradesController extends Controller
             'description',
         ]);
 
+        $this->applyTableStatusFilter($query, $request);
+
         [$sort, $direction] = $this->applyTableSort($query, [
             'name' => 'name',
             'level' => 'level',

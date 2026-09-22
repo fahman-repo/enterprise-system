@@ -23,9 +23,23 @@
                 ['key' => 'is_active', 'label' => __('Status'), 'sortable' => true],
                 ['key' => 'actions', 'label' => __('Actions'), 'sortable' => false, 'align' => 'right'],
             ];
+
+            $unitFilters = [
+                'status' => [
+                    'label' => __('Status'),
+                    'all' => __('All statuses'),
+                    'options' => [
+                        ['value' => 'active', 'label' => __('Active')],
+                        ['value' => 'inactive', 'label' => __('Inactive')],
+                    ],
+                ],
+            ];
         @endphp
 
-        <x-ui.data-table :columns="$columns" :paginator="$units" :sort="$sort" :direction="$direction" :empty="__('No units found.')">
+        <x-ui.data-table :columns="$columns" :paginator="$units" :sort="$sort" :direction="$direction" :empty="__('No units found.')" :exclude-params="array_keys($unitFilters)">
+            <x-slot:filters>
+                <x-ui.filter-bar :filters="$unitFilters" />
+            </x-slot:filters>
             @foreach ($units as $unit)
                 <tr class="hover:bg-accent/50">
                     <td class="px-4 py-3 font-medium">{{ $unit->name }}</td>

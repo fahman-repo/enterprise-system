@@ -22,6 +22,8 @@ class MaritalStatusesController extends Controller
 
         $this->applyTableSearch($query, $this->tableSearch($request), ['name']);
 
+        $this->applyTableStatusFilter($query, $request);
+
         [$sort, $direction] = $this->applyTableSort($query, [
             'name' => 'name',
             'employees' => 'employees_count',

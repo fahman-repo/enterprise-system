@@ -36,6 +36,16 @@ test('religions index lists religions', function () {
         ->assertSee('Quixotism');
 });
 
+test('religions index filters by status', function () {
+    $active = Religion::factory()->create(['name' => 'Active Religion']);
+    $inactive = Religion::factory()->inactive()->create(['name' => 'Inactive Religion']);
+
+    $this->get(route('religions.index', ['status' => 'inactive']))
+        ->assertOk()
+        ->assertSee($inactive->name)
+        ->assertDontSee($active->name);
+});
+
 test('admin can create and update a religion', function () {
     $this->post(route('religions.store'), [
         'name' => 'New Religion',

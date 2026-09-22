@@ -25,61 +25,46 @@
                 ['key' => 'is_active', 'label' => __('Status'), 'sortable' => true],
                 ['key' => 'actions', 'label' => __('Actions'), 'sortable' => false, 'align' => 'right'],
             ];
+
+            $productFilters = [
+                'category_id' => [
+                    'label' => __('Category'),
+                    'all' => __('All categories'),
+                    'options' => $categories->map(fn ($option) => [
+                        'value' => (string) $option['category']->id,
+                        'label' => str_repeat('— ', $option['depth']).$option['category']->name,
+                    ])->values()->all(),
+                ],
+                'brand_id' => [
+                    'label' => __('Brand'),
+                    'all' => __('All brands'),
+                    'options' => $brands->map(fn ($brand) => [
+                        'value' => (string) $brand->id,
+                        'label' => $brand->name,
+                    ])->values()->all(),
+                ],
+                'status' => [
+                    'label' => __('Status'),
+                    'all' => __('All statuses'),
+                    'options' => [
+                        ['value' => 'active', 'label' => __('Active')],
+                        ['value' => 'inactive', 'label' => __('Inactive')],
+                    ],
+                ],
+                'stock' => [
+                    'label' => __('Stock'),
+                    'all' => __('All stock'),
+                    'options' => [
+                        ['value' => 'low', 'label' => __('Low stock')],
+                        ['value' => 'out', 'label' => __('Out of stock')],
+                    ],
+                ],
+            ];
         @endphp
 
-        <x-ui.data-table :columns="$columns" :paginator="$products" :sort="$sort" :direction="$direction" :empty="__('No products found.')">
+        <x-ui.data-table :columns="$columns" :paginator="$products" :sort="$sort" :direction="$direction" :empty="__('No products found.')" :exclude-params="array_keys($productFilters)">
             <x-slot:filters>
-                <x-ui.select
-                    name="category_id"
-                    class="w-44"
-                    aria-label="{{ __('Category') }}"
-                    x-data
-                    @change="$el.form.requestSubmit()"
-                >
-                    <option value="">{{ __('All categories') }}</option>
-                    @foreach ($categories as $option)
-                        <option value="{{ $option['category']->id }}" @selected((string) request('category_id') === (string) $option['category']->id)>
-                            {{ str_repeat('— ', $option['depth']).$option['category']->name }}
-                        </option>
-                    @endforeach
-                </x-ui.select>
-
-                <x-ui.select
-                    name="brand_id"
-                    class="w-40"
-                    aria-label="{{ __('Brand') }}"
-                    x-data
-                    @change="$el.form.requestSubmit()"
-                >
-                    <option value="">{{ __('All brands') }}</option>
-                    @foreach ($brands as $brand)
-                        <option value="{{ $brand->id }}" @selected((string) request('brand_id') === (string) $brand->id)>{{ $brand->name }}</option>
-                    @endforeach
-                </x-ui.select>
-
-                <x-ui.select
-                    name="status"
-                    class="w-36"
-                    aria-label="{{ __('Status') }}"
-                    x-data
-                    @change="$el.form.requestSubmit()"
-                >
-                    <option value="">{{ __('All statuses') }}</option>
-                    <option value="active" @selected(request('status') === 'active')>{{ __('Active') }}</option>
-                    <option value="inactive" @selected(request('status') === 'inactive')>{{ __('Inactive') }}</option>
-                </x-ui.select>
-
-                <x-ui.select
-                    name="stock"
-                    class="w-36"
-                    aria-label="{{ __('Stock') }}"
-                    x-data
-                    @change="$el.form.requestSubmit()"
-                >
-                    <option value="">{{ __('All stock') }}</option>
-                    <option value="low" @selected(request('stock') === 'low')>{{ __('Low stock') }}</option>
-                    <option value="out" @selected(request('stock') === 'out')>{{ __('Out of stock') }}</option>
-                </x-ui.select>
+                <x-ui.filter-bar :filters="$productFilters" />
             </x-slot:filters>
 
             @foreach ($products as $product)

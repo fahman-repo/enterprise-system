@@ -53,6 +53,12 @@
                 </x-ui.select>
             </div>
 
+            <label class="flex items-center gap-2 text-sm">
+                <input type="hidden" name="is_active" value="0">
+                <x-ui.checkbox name="is_active" value="1" :checked="(bool) old('is_active', $user?->is_active ?? true)" />
+                {{ __('Active') }}
+            </label>
+
             <div class="flex items-center justify-end gap-2 pt-2">
                 <x-ui.button variant="outline" href="{{ route('users.index') }}" type="button">
                     {{ __('Cancel') }}

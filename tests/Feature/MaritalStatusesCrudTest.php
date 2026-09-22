@@ -36,6 +36,16 @@ test('marital statuses index lists statuses', function () {
         ->assertSee('Quixotic Status');
 });
 
+test('marital statuses index filters by status', function () {
+    $active = MaritalStatus::factory()->create(['name' => 'Active Marital Status']);
+    $inactive = MaritalStatus::factory()->inactive()->create(['name' => 'Inactive Marital Status']);
+
+    $this->get(route('marital-statuses.index', ['status' => 'inactive']))
+        ->assertOk()
+        ->assertSee($inactive->name)
+        ->assertDontSee($active->name);
+});
+
 test('admin can create and update a marital status', function () {
     $this->post(route('marital-statuses.store'), [
         'name' => 'New Status',

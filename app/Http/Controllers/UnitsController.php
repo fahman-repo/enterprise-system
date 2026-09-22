@@ -25,6 +25,8 @@ class UnitsController extends Controller
             'abbreviation',
         ]);
 
+        $this->applyTableStatusFilter($query, $request);
+
         [$sort, $direction] = $this->applyTableSort($query, [
             'name' => 'name',
             'abbreviation' => 'abbreviation',

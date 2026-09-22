@@ -52,6 +52,16 @@ test('units index search matches name and abbreviation', function () {
         ->assertSee($unit->abbreviation);
 });
 
+test('units index filters by status', function () {
+    $active = Unit::factory()->create(['name' => 'Active Unit']);
+    $inactive = Unit::factory()->inactive()->create(['name' => 'Inactive Unit']);
+
+    $this->get(route('units.index', ['status' => 'inactive']))
+        ->assertOk()
+        ->assertSee($inactive->name)
+        ->assertDontSee($active->name);
+});
+
 test('admin can create and update a unit', function () {
     $this->post(route('units.store'), [
         'name' => 'Kilogram',

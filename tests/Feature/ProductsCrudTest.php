@@ -124,6 +124,33 @@ test('products index filters by brand, status and stock', function () {
         ->assertDontSee($outOfStock->name);
 });
 
+test('products index ignores status when a category filter is applied', function () {
+    $category = Category::factory()->create();
+    $inCategory = Product::factory()->create(['category_id' => $category->id, 'name' => 'Categorised Product']);
+    $inactive = Product::factory()->inactive()->create(['name' => 'Inactive Elsewhere']);
+
+    $this->get(route('products.index', ['category_id' => $category->id, 'status' => 'inactive']))
+        ->assertOk()
+        ->assertSee($inCategory->name)
+        ->assertDontSee($inactive->name);
+});
+
+test('products index applies only the first matching filter', function () {
+    $category = Category::factory()->create();
+    $inCategory = Product::factory()->create(['category_id' => $category->id, 'name' => 'In First Category']);
+
+    $brand = Brand::factory()->create();
+    $byBrand = Product::factory()->create(['brand_id' => $brand->id, 'name' => 'In Branded Category']);
+
+    $this->get(route('products.index', [
+        'category_id' => $category->id,
+        'brand_id' => $brand->id,
+    ]))
+        ->assertOk()
+        ->assertSee($inCategory->name)
+        ->assertDontSee($byBrand->name);
+});
+
 test('products index sorts by a column', function () {
     Product::factory()->create(['name' => 'Alpha Product', 'selling_price' => 10]);
     Product::factory()->create(['name' => 'Zulu Product', 'selling_price' => 99]);

@@ -36,6 +36,16 @@ test('employment statuses index lists statuses', function () {
         ->assertSee('Quixotic Status');
 });
 
+test('employment statuses index filters by status', function () {
+    $active = EmploymentStatus::factory()->create(['name' => 'Active Employment Status']);
+    $inactive = EmploymentStatus::factory()->inactive()->create(['name' => 'Inactive Employment Status']);
+
+    $this->get(route('employment-statuses.index', ['status' => 'inactive']))
+        ->assertOk()
+        ->assertSee($inactive->name)
+        ->assertDontSee($active->name);
+});
+
 test('admin can create and update an employment status', function () {
     $this->post(route('employment-statuses.store'), [
         'code' => 'NEW',

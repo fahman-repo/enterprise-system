@@ -20,11 +20,27 @@
                 ['key' => 'name', 'label' => __('Name'), 'sortable' => true],
                 ['key' => 'email', 'label' => __('Email'), 'sortable' => true],
                 ['key' => 'role', 'label' => __('Role'), 'sortable' => true],
+                ['key' => 'is_active', 'label' => __('Status'), 'sortable' => true],
                 ['key' => 'actions', 'label' => __('Actions'), 'sortable' => false, 'align' => 'right'],
+            ];
+
+            $userFilters = [
+                'status' => [
+                    'label' => __('Status'),
+                    'all' => __('All statuses'),
+                    'options' => [
+                        ['value' => 'active', 'label' => __('Active')],
+                        ['value' => 'inactive', 'label' => __('Inactive')],
+                    ],
+                ],
             ];
         @endphp
 
-        <x-ui.data-table :columns="$columns" :paginator="$users" :sort="$sort" :direction="$direction" :empty="__('No users found.')">
+        <x-ui.data-table :columns="$columns" :paginator="$users" :sort="$sort" :direction="$direction" :empty="__('No users found.')" :exclude-params="array_keys($userFilters)">
+            <x-slot:filters>
+                <x-ui.filter-bar :filters="$userFilters" />
+            </x-slot:filters>
+
             @foreach ($users as $user)
                 <tr class="hover:bg-accent/50">
                     <td class="px-4 py-3 font-medium">{{ $user->name }}</td>
@@ -34,6 +50,13 @@
                             <x-ui.badge variant="secondary">{{ $user->role->name }}</x-ui.badge>
                         @else
                             <x-ui.badge variant="muted">{{ __('No role') }}</x-ui.badge>
+                        @endif
+                    </td>
+                    <td class="px-4 py-3">
+                        @if ($user->is_active)
+                            <x-ui.badge variant="success">{{ __('Active') }}</x-ui.badge>
+                        @else
+                            <x-ui.badge variant="muted">{{ __('Inactive') }}</x-ui.badge>
                         @endif
                     </td>
                     <td class="px-4 py-3">

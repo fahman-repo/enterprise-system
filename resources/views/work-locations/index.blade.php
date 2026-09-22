@@ -25,21 +25,22 @@
                 ['key' => 'is_active', 'label' => __('Status'), 'sortable' => true],
                 ['key' => 'actions', 'label' => __('Actions'), 'sortable' => false, 'align' => 'right'],
             ];
+
+            $locationFilters = [
+                'status' => [
+                    'label' => __('Status'),
+                    'all' => __('All statuses'),
+                    'options' => [
+                        ['value' => 'active', 'label' => __('Active')],
+                        ['value' => 'inactive', 'label' => __('Inactive')],
+                    ],
+                ],
+            ];
         @endphp
 
-        <x-ui.data-table :columns="$columns" :paginator="$locations" :sort="$sort" :direction="$direction" :empty="__('No work locations found.')">
+        <x-ui.data-table :columns="$columns" :paginator="$locations" :sort="$sort" :direction="$direction" :empty="__('No work locations found.')" :exclude-params="array_keys($locationFilters)">
             <x-slot:filters>
-                <x-ui.select
-                    name="status"
-                    class="w-36"
-                    aria-label="{{ __('Status') }}"
-                    x-data
-                    @change="$el.form.requestSubmit()"
-                >
-                    <option value="">{{ __('All statuses') }}</option>
-                    <option value="active" @selected(request('status') === 'active')>{{ __('Active') }}</option>
-                    <option value="inactive" @selected(request('status') === 'inactive')>{{ __('Inactive') }}</option>
-                </x-ui.select>
+                <x-ui.filter-bar :filters="$locationFilters" />
             </x-slot:filters>
 
             @foreach ($locations as $location)

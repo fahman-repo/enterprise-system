@@ -153,27 +153,42 @@ class ProductsController extends Controller
 
     /**
      * Apply the category, brand, status and stock filters from the query string.
+     *
+     * The list UI allows a single active filter; only the first matching
+     * parameter is applied so stale URLs cannot combine filters.
      */
     protected function applyTableFilters(Builder $query, Request $request): void
     {
         $categoryId = $request->query('category_id');
 
-        if ($categoryId !== null && $category = Category::query()->find($categoryId)) {
-            $query->whereIn('products.category_id', $category->descendantIds()->push($category->getKey())->all());
+        if ($categoryId !== null && $categoryId !== '') {
+            if ($category = Category::query()->find($categoryId)) {
+                $query->whereIn('products.category_id', $category->descendantIds()->push($category->getKey())->all());
+            }
+
+            return;
         }
 
         if ($brandId = $request->query('brand_id')) {
             $query->where('products.brand_id', $brandId);
+
+            return;
         }
 
         if (in_array($request->query('status'), ['active', 'inactive'], true)) {
             $query->where('products.is_active', $request->query('status') === 'active');
+
+            return;
         }
 
         if ($request->query('stock') === 'out') {
             $query->where('products.track_stock', true)
                 ->where('products.stock_quantity', '<=', 0);
-        } elseif ($request->query('stock') === 'low') {
+
+            return;
+        }
+
+        if ($request->query('stock') === 'low') {
             $query->where('products.track_stock', true)
                 ->whereNotNull('products.reorder_level')
                 ->where('products.stock_quantity', '>', 0)

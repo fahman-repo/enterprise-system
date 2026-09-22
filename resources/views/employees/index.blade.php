@@ -25,57 +25,57 @@
                 ['key' => 'is_active', 'label' => __('Status'), 'sortable' => true],
                 ['key' => 'actions', 'label' => __('Actions'), 'sortable' => false, 'align' => 'right'],
             ];
+
+            $toOptions = fn ($records) => $records->map(fn ($record) => [
+                'value' => (string) $record->id,
+                'label' => $record->name,
+            ])->values()->all();
+
+            $employeeFilters = [
+                'division_id' => [
+                    'label' => __('Division'),
+                    'all' => __('All divisions'),
+                    'options' => $toOptions($divisions),
+                ],
+                'department_id' => [
+                    'label' => __('Department'),
+                    'all' => __('All departments'),
+                    'options' => $toOptions($departments),
+                ],
+                'org_unit_id' => [
+                    'label' => __('Org unit'),
+                    'all' => __('All org units'),
+                    'options' => $toOptions($orgUnits),
+                ],
+                'position_id' => [
+                    'label' => __('Position'),
+                    'all' => __('All positions'),
+                    'options' => $toOptions($positions),
+                ],
+                'employment_status_id' => [
+                    'label' => __('Employment status'),
+                    'all' => __('All statuses'),
+                    'options' => $toOptions($employmentStatuses),
+                ],
+                'work_location_id' => [
+                    'label' => __('Work location'),
+                    'all' => __('All locations'),
+                    'options' => $toOptions($workLocations),
+                ],
+                'status' => [
+                    'label' => __('Status'),
+                    'all' => __('All statuses'),
+                    'options' => [
+                        ['value' => 'active', 'label' => __('Active')],
+                        ['value' => 'inactive', 'label' => __('Inactive')],
+                    ],
+                ],
+            ];
         @endphp
 
-        <x-ui.data-table :columns="$columns" :paginator="$employees" :sort="$sort" :direction="$direction" :empty="__('No employees found.')">
+        <x-ui.data-table :columns="$columns" :paginator="$employees" :sort="$sort" :direction="$direction" :empty="__('No employees found.')" :exclude-params="array_keys($employeeFilters)">
             <x-slot:filters>
-                <x-ui.select name="division_id" class="w-44" aria-label="{{ __('Division') }}" x-data @change="$el.form.requestSubmit()">
-                    <option value="">{{ __('All divisions') }}</option>
-                    @foreach ($divisions as $division)
-                        <option value="{{ $division->id }}" @selected((string) request('division_id') === (string) $division->id)>{{ $division->name }}</option>
-                    @endforeach
-                </x-ui.select>
-
-                <x-ui.select name="department_id" class="w-48" aria-label="{{ __('Department') }}" x-data @change="$el.form.requestSubmit()">
-                    <option value="">{{ __('All departments') }}</option>
-                    @foreach ($departments as $department)
-                        <option value="{{ $department->id }}" @selected((string) request('department_id') === (string) $department->id)>{{ $department->name }}</option>
-                    @endforeach
-                </x-ui.select>
-
-                <x-ui.select name="org_unit_id" class="w-44" aria-label="{{ __('Org unit') }}" x-data @change="$el.form.requestSubmit()">
-                    <option value="">{{ __('All org units') }}</option>
-                    @foreach ($orgUnits as $orgUnit)
-                        <option value="{{ $orgUnit->id }}" @selected((string) request('org_unit_id') === (string) $orgUnit->id)>{{ $orgUnit->name }}</option>
-                    @endforeach
-                </x-ui.select>
-
-                <x-ui.select name="position_id" class="w-44" aria-label="{{ __('Position') }}" x-data @change="$el.form.requestSubmit()">
-                    <option value="">{{ __('All positions') }}</option>
-                    @foreach ($positions as $position)
-                        <option value="{{ $position->id }}" @selected((string) request('position_id') === (string) $position->id)>{{ $position->name }}</option>
-                    @endforeach
-                </x-ui.select>
-
-                <x-ui.select name="employment_status_id" class="w-44" aria-label="{{ __('Employment status') }}" x-data @change="$el.form.requestSubmit()">
-                    <option value="">{{ __('All statuses') }}</option>
-                    @foreach ($employmentStatuses as $status)
-                        <option value="{{ $status->id }}" @selected((string) request('employment_status_id') === (string) $status->id)>{{ $status->name }}</option>
-                    @endforeach
-                </x-ui.select>
-
-                <x-ui.select name="work_location_id" class="w-44" aria-label="{{ __('Work location') }}" x-data @change="$el.form.requestSubmit()">
-                    <option value="">{{ __('All locations') }}</option>
-                    @foreach ($workLocations as $location)
-                        <option value="{{ $location->id }}" @selected((string) request('work_location_id') === (string) $location->id)>{{ $location->name }}</option>
-                    @endforeach
-                </x-ui.select>
-
-                <x-ui.select name="status" class="w-36" aria-label="{{ __('Status') }}" x-data @change="$el.form.requestSubmit()">
-                    <option value="">{{ __('All statuses') }}</option>
-                    <option value="active" @selected(request('status') === 'active')>{{ __('Active') }}</option>
-                    <option value="inactive" @selected(request('status') === 'inactive')>{{ __('Inactive') }}</option>
-                </x-ui.select>
+                <x-ui.filter-bar :filters="$employeeFilters" />
             </x-slot:filters>
 
             @foreach ($employees as $employee)

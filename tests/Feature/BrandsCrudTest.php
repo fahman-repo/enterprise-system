@@ -47,6 +47,16 @@ test('brands index search matches name and slug', function () {
         ->assertDontSee($unmatched->name);
 });
 
+test('brands index filters by status', function () {
+    $active = Brand::factory()->create(['name' => 'Active Brand']);
+    $inactive = Brand::factory()->inactive()->create(['name' => 'Inactive Brand']);
+
+    $this->get(route('brands.index', ['status' => 'inactive']))
+        ->assertOk()
+        ->assertSee($inactive->name)
+        ->assertDontSee($active->name);
+});
+
 test('admin can create and update a brand', function () {
     $this->post(route('brands.store'), [
         'name' => 'New Brand',

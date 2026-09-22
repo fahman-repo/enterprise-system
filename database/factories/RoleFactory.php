@@ -23,6 +23,17 @@ class RoleFactory extends Factory
         return [
             'name' => Str::title($name),
             'slug' => Str::slug($name),
+            'is_active' => true,
         ];
+    }
+
+    /**
+     * Indicate that the role is inactive.
+     */
+    public function inactive(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'is_active' => false,
+        ]);
     }
 }
