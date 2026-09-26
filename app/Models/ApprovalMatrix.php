@@ -14,10 +14,17 @@ class ApprovalMatrix extends Model
     /** @use HasFactory<ApprovalMatrixFactory> */
     use Auditable, HasFactory;
 
+    public const MODE_SEQUENTIAL = 'sequential';
+
+    public const MODE_PARALLEL = 'parallel';
+
+    public const MODES = [self::MODE_SEQUENTIAL, self::MODE_PARALLEL];
+
     protected $fillable = [
         'module_key',
         'is_active',
         'configuration_version',
+        'mode',
     ];
 
     protected function casts(): array

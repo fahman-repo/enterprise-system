@@ -19,6 +19,8 @@ class ApprovalRequestStage extends Model
 
     public const STATUS_REJECTED = 'Rejected';
 
+    public const STATUS_SKIPPED = 'Skipped';
+
     protected $fillable = [
         'approval_request_id',
         'stage_number',

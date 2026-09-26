@@ -8,6 +8,7 @@ use App\Http\Requests\Approvals\CancelApprovalRequestRequest;
 use App\Http\Requests\Approvals\RejectApprovalRequestRequest;
 use App\Models\Activity;
 use App\Models\ApprovalRequest;
+use App\Models\ApprovalRequestStage;
 use App\Services\Approvals\ApprovalModuleRegistry;
 use App\Services\ApprovalWorkflowService;
 use Illuminate\Http\RedirectResponse;
@@ -50,12 +51,22 @@ class ApprovalsController extends Controller
         }
 
         if ($request->query('scope') === 'awaiting') {
+            $roleId = $request->user()->role_id;
             $query->where('status', ApprovalRequest::STATUS_PENDING)
                 ->where('maker_user_id', '!=', $request->user()->id)
-                ->whereHas('stages', function ($stageQuery) use ($request): void {
+                ->whereHas('stages', function ($stageQuery) use ($roleId): void {
                     $stageQuery
-                        ->whereColumn('approval_request_stages.stage_number', 'approval_requests.current_stage')
-                        ->whereHas('roles', fn ($roleQuery) => $roleQuery->where('role_id', $request->user()->role_id));
+                        ->where('status', ApprovalRequestStage::STATUS_PENDING)
+                        ->whereHas('roles', fn ($roleQuery) => $roleQuery->where('role_id', $roleId))
+                        ->where(function ($modeQuery): void {
+                            $modeQuery
+                                ->where(function ($sequential): void {
+                                    $sequential
+                                        ->whereRaw("COALESCE(approval_requests.approval_mode, 'sequential') = 'sequential'")
+                                        ->whereColumn('approval_request_stages.stage_number', 'approval_requests.current_stage');
+                                })
+                                ->orWhereRaw("COALESCE(approval_requests.approval_mode, 'sequential') = 'parallel'");
+                        });
                 });
         }
 

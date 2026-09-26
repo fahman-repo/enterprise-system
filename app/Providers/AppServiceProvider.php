@@ -5,9 +5,13 @@ namespace App\Providers;
 use App\Models\User;
 use App\Services\Approvals\ApprovalModule;
 use App\Services\Approvals\ApprovalModuleRegistry;
+use App\Services\Approvals\BenefitClaimsApprovalModule;
+use App\Services\Approvals\BenefitEnrollmentsApprovalModule;
+use App\Services\Approvals\BenefitsApprovalModule;
 use App\Services\Approvals\BrandsApprovalModule;
 use App\Services\Approvals\CategoriesApprovalModule;
 use App\Services\Approvals\DepartmentsApprovalModule;
+use App\Services\Approvals\DevelopmentProgramsApprovalModule;
 use App\Services\Approvals\DivisionsApprovalModule;
 use App\Services\Approvals\EducationLevelsApprovalModule;
 use App\Services\Approvals\EmployeesApprovalModule;
@@ -21,9 +25,9 @@ use App\Services\Approvals\PositionsApprovalModule;
 use App\Services\Approvals\ProductsApprovalModule;
 use App\Services\Approvals\ReligionsApprovalModule;
 use App\Services\Approvals\RolesApprovalModule;
+use App\Services\Approvals\SitesApprovalModule;
 use App\Services\Approvals\UnitsApprovalModule;
 use App\Services\Approvals\UsersApprovalModule;
-use App\Services\Approvals\WorkLocationsApprovalModule;
 use App\Services\PermissionService;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\View;
@@ -52,12 +56,16 @@ class AppServiceProvider extends ServiceProvider
         DepartmentsApprovalModule::class,
         OrgUnitsApprovalModule::class,
         PositionsApprovalModule::class,
+        DevelopmentProgramsApprovalModule::class,
         GradesApprovalModule::class,
         EmploymentStatusesApprovalModule::class,
-        WorkLocationsApprovalModule::class,
+        SitesApprovalModule::class,
         ReligionsApprovalModule::class,
         EducationLevelsApprovalModule::class,
         MaritalStatusesApprovalModule::class,
+        BenefitsApprovalModule::class,
+        BenefitEnrollmentsApprovalModule::class,
+        BenefitClaimsApprovalModule::class,
     ];
 
     /**

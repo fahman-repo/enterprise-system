@@ -3,9 +3,14 @@
 use App\Http\Controllers\ApprovalMatricesController;
 use App\Http\Controllers\ApprovalsController;
 use App\Http\Controllers\AuditLogController;
+use App\Http\Controllers\BenefitClaimsController;
+use App\Http\Controllers\BenefitEnrollmentsController;
+use App\Http\Controllers\BenefitsController;
 use App\Http\Controllers\BrandsController;
 use App\Http\Controllers\CategoriesController;
 use App\Http\Controllers\DepartmentsController;
+use App\Http\Controllers\DevelopmentProgramEnrollmentsController;
+use App\Http\Controllers\DevelopmentProgramsController;
 use App\Http\Controllers\DivisionsController;
 use App\Http\Controllers\EducationLevelsController;
 use App\Http\Controllers\EmployeesController;
@@ -20,9 +25,9 @@ use App\Http\Controllers\PositionsController;
 use App\Http\Controllers\ProductsController;
 use App\Http\Controllers\ReligionsController;
 use App\Http\Controllers\RolesController;
+use App\Http\Controllers\SitesController;
 use App\Http\Controllers\UnitsController;
 use App\Http\Controllers\UsersController;
-use App\Http\Controllers\WorkLocationsController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -258,18 +263,20 @@ Route::middleware('auth')->group(function () {
     Route::delete('employment-statuses/{employmentStatus}', [EmploymentStatusesController::class, 'destroy'])
         ->middleware('menu.permission:employment-statuses,delete')->name('employment-statuses.destroy');
 
-    Route::get('work-locations', [WorkLocationsController::class, 'index'])
-        ->middleware('menu.permission:work-locations,view')->name('work-locations.index');
-    Route::get('work-locations/create', [WorkLocationsController::class, 'create'])
-        ->middleware('menu.permission:work-locations,create')->name('work-locations.create');
-    Route::post('work-locations', [WorkLocationsController::class, 'store'])
-        ->middleware('menu.permission:work-locations,create')->name('work-locations.store');
-    Route::get('work-locations/{workLocation}/edit', [WorkLocationsController::class, 'edit'])
-        ->middleware('menu.permission:work-locations,update')->name('work-locations.edit');
-    Route::put('work-locations/{workLocation}', [WorkLocationsController::class, 'update'])
-        ->middleware('menu.permission:work-locations,update')->name('work-locations.update');
-    Route::delete('work-locations/{workLocation}', [WorkLocationsController::class, 'destroy'])
-        ->middleware('menu.permission:work-locations,delete')->name('work-locations.destroy');
+    Route::get('sites', [SitesController::class, 'index'])
+        ->middleware('menu.permission:sites,view')->name('sites.index');
+    Route::get('sites/create', [SitesController::class, 'create'])
+        ->middleware('menu.permission:sites,create')->name('sites.create');
+    Route::post('sites', [SitesController::class, 'store'])
+        ->middleware('menu.permission:sites,create')->name('sites.store');
+    Route::get('sites/{site}', [SitesController::class, 'show'])
+        ->middleware('menu.permission:sites,view')->name('sites.show');
+    Route::get('sites/{site}/edit', [SitesController::class, 'edit'])
+        ->middleware('menu.permission:sites,update')->name('sites.edit');
+    Route::put('sites/{site}', [SitesController::class, 'update'])
+        ->middleware('menu.permission:sites,update')->name('sites.update');
+    Route::delete('sites/{site}', [SitesController::class, 'destroy'])
+        ->middleware('menu.permission:sites,delete')->name('sites.destroy');
 
     Route::get('org-chart', [OrgChartController::class, 'index'])
         ->middleware('menu.permission:org-chart,view')->name('org-chart.index');
@@ -314,6 +321,74 @@ Route::middleware('auth')->group(function () {
         ->middleware('menu.permission:marital-statuses,update')->name('marital-statuses.update');
     Route::delete('marital-statuses/{maritalStatus}', [MaritalStatusesController::class, 'destroy'])
         ->middleware('menu.permission:marital-statuses,delete')->name('marital-statuses.destroy');
+    Route::get('development-programs', [DevelopmentProgramsController::class, 'index'])
+        ->middleware('menu.permission:development-programs,view')->name('development-programs.index');
+    Route::get('development-programs/create', [DevelopmentProgramsController::class, 'create'])
+        ->middleware('menu.permission:development-programs,create')->name('development-programs.create');
+    Route::post('development-programs', [DevelopmentProgramsController::class, 'store'])
+        ->middleware('menu.permission:development-programs,create')->name('development-programs.store');
+    Route::get('development-programs/{developmentProgram}', [DevelopmentProgramsController::class, 'show'])
+        ->middleware('menu.permission:development-programs,view')->name('development-programs.show');
+    Route::get('development-programs/{developmentProgram}/edit', [DevelopmentProgramsController::class, 'edit'])
+        ->middleware('menu.permission:development-programs,update')->name('development-programs.edit');
+    Route::put('development-programs/{developmentProgram}', [DevelopmentProgramsController::class, 'update'])
+        ->middleware('menu.permission:development-programs,update')->name('development-programs.update');
+    Route::delete('development-programs/{developmentProgram}', [DevelopmentProgramsController::class, 'destroy'])
+        ->middleware('menu.permission:development-programs,delete')->name('development-programs.destroy');
+    Route::post('development-programs/{developmentProgram}/enrollments', [DevelopmentProgramEnrollmentsController::class, 'store'])
+        ->middleware('menu.permission:development-programs,update')->name('development-programs.enrollments.store');
+    Route::put('development-programs/{developmentProgram}/enrollments/{enrollment}', [DevelopmentProgramEnrollmentsController::class, 'update'])
+        ->middleware('menu.permission:development-programs,update')->name('development-programs.enrollments.update');
+    Route::delete('development-programs/{developmentProgram}/enrollments/{enrollment}', [DevelopmentProgramEnrollmentsController::class, 'destroy'])
+        ->middleware('menu.permission:development-programs,update')->name('development-programs.enrollments.destroy');
+    Route::get('benefits', [BenefitsController::class, 'index'])
+        ->middleware('menu.permission:benefits,view')->name('benefits.index');
+    Route::get('benefits/create', [BenefitsController::class, 'create'])
+        ->middleware('menu.permission:benefits,create')->name('benefits.create');
+    Route::post('benefits', [BenefitsController::class, 'store'])
+        ->middleware('menu.permission:benefits,create')->name('benefits.store');
+    Route::get('benefits/{benefit}/edit', [BenefitsController::class, 'edit'])
+        ->middleware('menu.permission:benefits,update')->name('benefits.edit');
+    Route::put('benefits/{benefit}', [BenefitsController::class, 'update'])
+        ->middleware('menu.permission:benefits,update')->name('benefits.update');
+    Route::delete('benefits/{benefit}', [BenefitsController::class, 'destroy'])
+        ->middleware('menu.permission:benefits,delete')->name('benefits.destroy');
+    Route::get('benefit-enrollments', [BenefitEnrollmentsController::class, 'index'])
+        ->middleware('menu.permission:benefit-enrollments,view')->name('benefit-enrollments.index');
+    Route::get('benefit-enrollments/create', [BenefitEnrollmentsController::class, 'create'])
+        ->middleware('menu.permission:benefit-enrollments,create')->name('benefit-enrollments.create');
+    Route::post('benefit-enrollments', [BenefitEnrollmentsController::class, 'store'])
+        ->middleware('menu.permission:benefit-enrollments,create')->name('benefit-enrollments.store');
+    Route::get('benefit-enrollments/{benefitEnrollment}', [BenefitEnrollmentsController::class, 'show'])
+        ->middleware('menu.permission:benefit-enrollments,view')->name('benefit-enrollments.show');
+    Route::get('benefit-enrollments/{benefitEnrollment}/edit', [BenefitEnrollmentsController::class, 'edit'])
+        ->middleware('menu.permission:benefit-enrollments,update')->name('benefit-enrollments.edit');
+    Route::put('benefit-enrollments/{benefitEnrollment}', [BenefitEnrollmentsController::class, 'update'])
+        ->middleware('menu.permission:benefit-enrollments,update')->name('benefit-enrollments.update');
+    Route::delete('benefit-enrollments/{benefitEnrollment}', [BenefitEnrollmentsController::class, 'destroy'])
+        ->middleware('menu.permission:benefit-enrollments,delete')->name('benefit-enrollments.destroy');
+    Route::get('benefit-claims', [BenefitClaimsController::class, 'index'])
+        ->middleware('menu.permission:benefit-claims,view')->name('benefit-claims.index');
+    Route::get('benefit-claims/create', [BenefitClaimsController::class, 'create'])
+        ->middleware('menu.permission:benefit-claims,create')->name('benefit-claims.create');
+    Route::post('benefit-claims', [BenefitClaimsController::class, 'store'])
+        ->middleware('menu.permission:benefit-claims,create')->name('benefit-claims.store');
+    Route::get('benefit-claims/{benefitClaim}', [BenefitClaimsController::class, 'show'])
+        ->middleware('menu.permission:benefit-claims,view')->name('benefit-claims.show');
+    Route::get('benefit-claims/{benefitClaim}/edit', [BenefitClaimsController::class, 'edit'])
+        ->middleware('menu.permission:benefit-claims,update')->name('benefit-claims.edit');
+    Route::put('benefit-claims/{benefitClaim}', [BenefitClaimsController::class, 'update'])
+        ->middleware('menu.permission:benefit-claims,update')->name('benefit-claims.update');
+    Route::delete('benefit-claims/{benefitClaim}', [BenefitClaimsController::class, 'destroy'])
+        ->middleware('menu.permission:benefit-claims,delete')->name('benefit-claims.destroy');
+    Route::post('benefit-claims/{benefitClaim}/approve', [BenefitClaimsController::class, 'approve'])
+        ->middleware('menu.permission:benefit-claims,update')->name('benefit-claims.approve');
+    Route::post('benefit-claims/{benefitClaim}/reject', [BenefitClaimsController::class, 'reject'])
+        ->middleware('menu.permission:benefit-claims,update')->name('benefit-claims.reject');
+    Route::post('benefit-claims/{benefitClaim}/paid', [BenefitClaimsController::class, 'markPaid'])
+        ->middleware('menu.permission:benefit-claims,update')->name('benefit-claims.paid');
+    Route::post('benefit-claims/{benefitClaim}/cancel', [BenefitClaimsController::class, 'cancel'])
+        ->middleware('menu.permission:benefit-claims,update')->name('benefit-claims.cancel');
 });
 
 require __DIR__.'/auth.php';

@@ -8,6 +8,7 @@ use Database\Factories\EmployeeFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Storage;
@@ -56,7 +57,7 @@ class Employee extends Model
         'org_unit_id',
         'position_id',
         'grade_id',
-        'work_location_id',
+        'site_id',
         'employment_status_id',
         'join_date',
         'end_date',
@@ -79,7 +80,7 @@ class Employee extends Model
             'org_unit_id' => 'integer',
             'position_id' => 'integer',
             'grade_id' => 'integer',
-            'work_location_id' => 'integer',
+            'site_id' => 'integer',
             'employment_status_id' => 'integer',
             'join_date' => 'date',
             'end_date' => 'date',
@@ -148,14 +149,26 @@ class Employee extends Model
         return $this->belongsTo(Grade::class);
     }
 
-    public function workLocation(): BelongsTo
+    public function site(): BelongsTo
     {
-        return $this->belongsTo(WorkLocation::class);
+        return $this->belongsTo(Site::class);
     }
 
     public function employmentStatus(): BelongsTo
     {
         return $this->belongsTo(EmploymentStatus::class);
+    }
+
+    public function developmentEnrollments(): HasMany
+    {
+        return $this->hasMany(DevelopmentEnrollment::class);
+    }
+
+    public function developmentPrograms(): BelongsToMany
+    {
+        return $this->belongsToMany(DevelopmentProgram::class, 'development_enrollments')
+            ->withPivot(['status', 'score', 'completed_at', 'certificate_no'])
+            ->withTimestamps();
     }
 
     public function genderLabel(): string

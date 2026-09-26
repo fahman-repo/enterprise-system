@@ -101,10 +101,10 @@
                     'all' => __('All statuses'),
                     'options' => $toOptions($employmentStatuses),
                 ],
-                'work_location_id' => [
-                    'label' => __('Work location'),
-                    'all' => __('All locations'),
-                    'options' => $toOptions($workLocations),
+                'site_id' => [
+                    'label' => __('Site'),
+                    'all' => __('All sites'),
+                    'options' => $toOptions($sites),
                 ],
                 'status' => [
                     'label' => __('Status'),
@@ -135,14 +135,14 @@
                         </div>
                     </td>
                     <td class="px-4 py-3 text-muted-foreground">
-                        {{ $employee->department?->name ?? __('—') }}
+                        {{ $employee->department?->name ?? __('â€”') }}
                         @if ($employee->division)
                             <span class="block text-xs">{{ $employee->division->name }}</span>
                         @endif
                     </td>
-                    <td class="px-4 py-3 text-muted-foreground">{{ $employee->position?->name ?? __('—') }}</td>
-                    <td class="px-4 py-3 text-muted-foreground">{{ $employee->employmentStatus?->name ?? __('—') }}</td>
-                    <td class="px-4 py-3 text-muted-foreground">{{ $employee->join_date?->format('d M Y') ?? __('—') }}</td>
+                    <td class="px-4 py-3 text-muted-foreground">{{ $employee->position?->name ?? __('â€”') }}</td>
+                    <td class="px-4 py-3 text-muted-foreground">{{ $employee->employmentStatus?->name ?? __('â€”') }}</td>
+                    <td class="px-4 py-3 text-muted-foreground">{{ $employee->join_date?->format('d M Y') ?? __('â€”') }}</td>
                     <td class="px-4 py-3">
                         @if ($employee->is_active)
                             <x-ui.badge variant="success">{{ __('Active') }}</x-ui.badge>

@@ -12,7 +12,7 @@ use App\Models\MaritalStatus;
 use App\Models\OrgUnit;
 use App\Models\Position;
 use App\Models\Religion;
-use App\Models\WorkLocation;
+use App\Models\Site;
 use Carbon\Carbon;
 use Illuminate\Database\Seeder;
 
@@ -51,7 +51,7 @@ class EmployeeSeeder extends Seeder
         $positions = Position::query()->orderBy('code')->get();
         $grades = Grade::query()->get()->keyBy('name');
         $statuses = EmploymentStatus::query()->get()->keyBy('code');
-        $locations = WorkLocation::query()->orderBy('code')->get()->values();
+        $sites = Site::query()->active()->orderBy('code')->get()->values();
         $religions = Religion::query()->orderBy('name')->get()->values();
         $maritalStatuses = MaritalStatus::query()->orderBy('name')->get()->values();
         $educationLevels = EducationLevel::query()->orderBy('name')->get()->values();
@@ -70,7 +70,7 @@ class EmployeeSeeder extends Seeder
          */
         $create = function (array $placement) use (
             &$seq,
-            $locations,
+            $sites,
             $statuses,
             $religions,
             $maritalStatuses,
@@ -114,7 +114,7 @@ class EmployeeSeeder extends Seeder
                 'bank_name' => ['BCA', 'BNI', 'BRI', 'Mandiri'][$seq % 4],
                 'bank_account_number' => sprintf('9%09d', $seq),
                 'bank_account_name' => $name,
-                'work_location_id' => $locations->isEmpty() ? null : $locations[$seq % $locations->count()]->id,
+                'site_id' => $sites->isEmpty() ? null : $sites[$seq % $sites->count()]->id,
                 'employment_status_id' => $employmentStatusId,
                 'join_date' => $joinDate,
                 'end_date' => null,

@@ -125,12 +125,12 @@
                     </div>
 
                     <div class="flex flex-col gap-2">
-                        <x-ui.label for="work_location_id">{{ __('Work location') }}</x-ui.label>
-                        <x-ui.select id="work_location_id" name="work_location_id">
-                            <option value="">{{ __('No work location') }}</option>
-                            @foreach ($workLocations as $location)
-                                <option value="{{ $location->id }}" @selected((string) old('work_location_id', $employee?->work_location_id) === (string) $location->id)>
-                                    {{ $location->name }}
+                        <x-ui.label for="site_id">{{ __('Site') }}</x-ui.label>
+                        <x-ui.select id="site_id" name="site_id">
+                            <option value="">{{ __('No site') }}</option>
+                            @foreach ($sites as $site)
+                                <option value="{{ $site->id }}" @selected((string) old('site_id', $employee?->site_id) === (string) $site->id)>
+                                    {{ $site->name }}
                                 </option>
                             @endforeach
                         </x-ui.select>

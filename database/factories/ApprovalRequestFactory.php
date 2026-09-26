@@ -29,6 +29,7 @@ class ApprovalRequestFactory extends Factory
             'status' => ApprovalRequest::STATUS_PENDING,
             'current_stage' => 1,
             'matrix_configuration_version' => 1,
+            'approval_mode' => ApprovalRequest::MODE_SEQUENTIAL,
             'submitted_at' => now(),
         ];
     }

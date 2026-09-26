@@ -48,6 +48,7 @@ class EntitiesController extends Controller
 
         return view('entities.index', [
             'entities' => $entities,
+            'summary' => $this->summary(),
             'sort' => $sort,
             'direction' => $direction,
         ]);
@@ -170,6 +171,36 @@ class EntitiesController extends Controller
         if (in_array($request->query('status'), ['active', 'inactive'], true)) {
             $query->where('entities.is_active', $request->query('status') === 'active');
         }
+    }
+
+    /**
+     * Headline counts for the summary cards.
+     *
+     * Deliberately independent of the listing query so the figures always
+     * describe the whole table, never the current search or filters. The role
+     * counts use the exact values the role filter accepts, so every card
+     * matches the listing it links to.
+     *
+     * @return array{total: int, active: int, inactive: int, vendors: int, customers: int}
+     */
+    protected function summary(): array
+    {
+        $row = Entity::query()
+            ->toBase()
+            ->selectRaw('count(*) as total')
+            ->selectRaw('count(case when entities.is_active then 1 end) as active')
+            ->selectRaw('count(case when not entities.is_active then 1 end) as inactive')
+            ->selectRaw('count(case when entities.role = ? then 1 end) as vendors', ['vendor'])
+            ->selectRaw('count(case when entities.role = ? then 1 end) as customers', ['customer'])
+            ->first();
+
+        return [
+            'total' => (int) ($row->total ?? 0),
+            'active' => (int) ($row->active ?? 0),
+            'inactive' => (int) ($row->inactive ?? 0),
+            'vendors' => (int) ($row->vendors ?? 0),
+            'customers' => (int) ($row->customers ?? 0),
+        ];
     }
 
     /**

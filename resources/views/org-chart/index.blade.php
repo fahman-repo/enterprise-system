@@ -19,9 +19,9 @@
 
                 <div class="w-48">
                     <x-ui.select data-org-chart-location>
-                        <option value="">{{ __('All locations') }}</option>
-                        @foreach ($workLocations as $location)
-                            <option value="{{ $location->id }}">{{ $location->name }}</option>
+                        <option value="">{{ __('All sites') }}</option>
+                        @foreach ($sites as $site)
+                            <option value="{{ $site->id }}">{{ $site->name }}</option>
                         @endforeach
                     </x-ui.select>
                 </div>

@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\ApprovalMatrices;
 
+use App\Models\ApprovalMatrix;
 use App\Services\Approvals\ApprovalModuleRegistry;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -19,6 +20,7 @@ class StoreApprovalMatrixRequest extends FormRequest
         return [
             'module_key' => ['required', 'string', Rule::in(app(ApprovalModuleRegistry::class)->keys())],
             'is_active' => ['nullable', 'boolean'],
+            'mode' => ['required', 'string', Rule::in(ApprovalMatrix::MODES)],
             'maker_roles' => ['required', 'array', 'min:1', 'distinct'],
             'maker_roles.*' => ['integer', Rule::exists('roles', 'id')->where('is_active', true)],
             'stages' => ['required', 'array', 'min:1', 'max:10'],

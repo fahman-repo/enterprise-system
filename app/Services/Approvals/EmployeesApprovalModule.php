@@ -64,7 +64,7 @@ class EmployeesApprovalModule extends CrudApprovalModule
             'org_unit_id',
             'position_id',
             'grade_id',
-            'work_location_id',
+            'site_id',
             'employment_status_id',
             'join_date',
             'end_date',
@@ -92,7 +92,7 @@ class EmployeesApprovalModule extends CrudApprovalModule
             'org_unit_id' => ['nullable', Rule::exists('org_units', 'id')],
             'position_id' => ['required', Rule::exists('positions', 'id')],
             'grade_id' => ['nullable', Rule::exists('grades', 'id')],
-            'work_location_id' => ['nullable', Rule::exists('work_locations', 'id')],
+            'site_id' => ['nullable', Rule::exists('sites', 'id')],
             'employment_status_id' => ['required', Rule::exists('employment_statuses', 'id')],
             'join_date' => ['required'],
         ];

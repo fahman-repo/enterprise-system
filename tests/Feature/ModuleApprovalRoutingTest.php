@@ -4,6 +4,7 @@ use App\Models\ApprovalRequest;
 use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Department;
+use App\Models\DevelopmentProgram;
 use App\Models\Division;
 use App\Models\EducationLevel;
 use App\Models\Employee;
@@ -16,9 +17,9 @@ use App\Models\Position;
 use App\Models\Product;
 use App\Models\Religion;
 use App\Models\Role;
+use App\Models\Site;
 use App\Models\Unit;
 use App\Models\User;
-use App\Models\WorkLocation;
 use App\Services\ApprovalWorkflowService;
 use App\Services\PermissionService;
 use Illuminate\Database\Eloquent\Model;
@@ -44,8 +45,9 @@ function approvalRoutingModuleKeys(): array
         'departments' => ['departments'],
         'org-units' => ['org-units'],
         'positions' => ['positions'],
+        'development-programs' => ['development-programs'],
         'employment-statuses' => ['employment-statuses'],
-        'work-locations' => ['work-locations'],
+        'sites' => ['sites'],
         'religions' => ['religions'],
         'education-levels' => ['education-levels'],
         'marital-statuses' => ['marital-statuses'],
@@ -58,7 +60,10 @@ function approvalRoutingModuleKeys(): array
  */
 function approvalRoutingScenario(string $key, bool $active = true): User
 {
-    $moduleMenu = Menu::factory()->create(['slug' => $key]);
+    // The data migration seeds development-programs under RefreshDatabase; reuse it when present.
+    $moduleMenu = $key === 'development-programs'
+        ? Menu::query()->firstOrCreate(['slug' => $key], ['name' => 'Development Programs'])
+        : Menu::factory()->create(['slug' => $key]);
     $approvalsMenu = Menu::factory()->create(['slug' => 'approvals']);
 
     $makerRole = Role::factory()->create();
@@ -440,6 +445,29 @@ function approvalRoutingFixture(string $key): array
                 'is_active' => '1',
             ],
         ],
+        'development-programs' => [
+            'model' => DevelopmentProgram::class,
+            'store_identify' => ['name' => 'Routing New Program'],
+            'original_identify' => ['name' => 'Routing Original Program'],
+            'updated_identify' => ['name' => 'Routing Updated Program'],
+            'row' => fn (): DevelopmentProgram => DevelopmentProgram::factory()->create(['name' => 'Routing Original Program']),
+            'store' => fn (): array => [
+                'name' => 'Routing New Program',
+                'type' => 'training',
+                'start_date' => '2026-10-01',
+                'end_date' => '2026-10-03',
+                'status' => 'planned',
+                'is_active' => '1',
+            ],
+            'update' => fn (Model $row): array => [
+                'name' => 'Routing Updated Program',
+                'type' => 'workshop',
+                'start_date' => '2026-10-01',
+                'end_date' => '2026-10-04',
+                'status' => 'planned',
+                'is_active' => '1',
+            ],
+        ],
         'employment-statuses' => [
             'model' => EmploymentStatus::class,
             'store_identify' => ['code' => 'ROUTING-NEW'],
@@ -461,25 +489,28 @@ function approvalRoutingFixture(string $key): array
                 'is_active' => '1',
             ],
         ],
-        'work-locations' => [
-            'model' => WorkLocation::class,
-            'store_identify' => ['code' => 'LOC-ROUTING-NEW'],
-            'original_identify' => ['code' => 'LOC-ROUTING-ORIG'],
-            'updated_identify' => ['code' => 'LOC-ROUTING-UPD'],
-            'row' => fn (): WorkLocation => WorkLocation::factory()->create([
-                'code' => 'LOC-ROUTING-ORIG',
-                'name' => 'Routing Original Office',
+        'sites' => [
+            'model' => Site::class,
+            'store_identify' => ['code' => 'SIT-ROUTING-NEW'],
+            'original_identify' => ['code' => 'SIT-ROUTING-ORIG'],
+            'updated_identify' => ['code' => 'SIT-ROUTING-UPD'],
+            'row' => fn (): Site => Site::factory()->create([
+                'code' => 'SIT-ROUTING-ORIG',
+                'name' => 'Routing Original Site',
+                'type' => 'branch',
             ]),
             'store' => fn (): array => [
-                'code' => 'LOC-ROUTING-NEW',
-                'name' => 'Routing New Office',
+                'code' => 'SIT-ROUTING-NEW',
+                'name' => 'Routing New Site',
+                'type' => 'warehouse',
                 'city' => 'Jakarta',
                 'province' => 'DKI Jakarta',
                 'is_active' => '1',
             ],
             'update' => fn (Model $row): array => [
-                'code' => 'LOC-ROUTING-UPD',
-                'name' => 'Routing Updated Office',
+                'code' => 'SIT-ROUTING-UPD',
+                'name' => 'Routing Updated Site',
+                'type' => 'branch',
                 'is_active' => '1',
             ],
         ],

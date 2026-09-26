@@ -127,6 +127,49 @@ test('entities index falls back to default order for unknown sort', function () 
         ->assertSeeInOrder(['Alpha Entity', 'Zulu Entity']);
 });
 
+test('entities index shows summary cards', function () {
+    Entity::factory()->vendor()->create();
+    Entity::factory()->vendor()->inactive()->create();
+    Entity::factory()->customer()->create();
+    Entity::factory()->vendorAndCustomer()->create();
+    Entity::factory()->create()->delete();
+
+    $this->get(route('entities.index'))
+        ->assertOk()
+        ->assertViewHas('summary', fn (array $summary) => $summary['total'] === 4
+            && $summary['active'] === 3
+            && $summary['inactive'] === 1
+            && $summary['vendors'] === 2
+            && $summary['customers'] === 1);
+});
+
+test('entities index summary ignores the search and filters', function () {
+    Entity::factory()->vendor()->create(['name' => 'Quixotic Vendor']);
+    Entity::factory()->customer()->create(['name' => 'Quixotic Customer']);
+
+    $this->get(route('entities.index', ['search' => 'Quixotic Vendor']))
+        ->assertOk()
+        ->assertViewHas('summary', fn (array $summary) => $summary['total'] === 2);
+
+    $this->get(route('entities.index', ['role' => 'vendor']))
+        ->assertOk()
+        ->assertViewHas('summary', fn (array $summary) => $summary['total'] === 2
+            && $summary['customers'] === 1);
+});
+
+test('entities index links the summary cards to their filters', function () {
+    $this->get(route('entities.index'))
+        ->assertOk()
+        ->assertSee(route('entities.index', ['status' => 'active']))
+        ->assertSee(route('entities.index', ['status' => 'inactive']))
+        ->assertSee(route('entities.index', ['role' => 'vendor']))
+        ->assertSee(route('entities.index', ['role' => 'customer']))
+        ->assertSee(__('View active entities'))
+        ->assertSee(__('View inactive entities'))
+        ->assertSee(__('View vendors'))
+        ->assertSee(__('View customers'));
+});
+
 test('admin can create an entity with a generated code', function () {
     $this->post(route('entities.store'), [
         'name' => 'PT Contoh',

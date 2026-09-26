@@ -26,10 +26,10 @@
                             <p class="text-sm text-muted-foreground">
                                 <span class="font-mono">{{ $employee->employee_number }}</span>
                                 @if ($employee->position)
-                                    · {{ $employee->position->name }}
+                                    Â· {{ $employee->position->name }}
                                 @endif
                                 @if ($employee->department)
-                                    · {{ $employee->department->name }}
+                                    Â· {{ $employee->department->name }}
                                 @endif
                             </p>
                         </div>
@@ -68,7 +68,7 @@
                             __('Org unit') => $employee->orgUnit?->name,
                             __('Position') => $employee->position?->name,
                             __('Grade') => $employee->grade?->name,
-                            __('Work location') => $employee->workLocation?->name,
+                            __('Site') => $employee->site?->name,
                             __('Employment status') => $employee->employmentStatus?->name,
                             __('Direct manager') => $employee->manager?->name,
                             __('Direct reports') => (string) $employee->reports_count,
@@ -83,7 +83,7 @@
                         @foreach ($employment as $label => $value)
                             <div class="flex flex-col gap-1">
                                 <dt class="text-xs font-medium uppercase tracking-wide text-muted-foreground">{{ $label }}</dt>
-                                <dd class="text-sm">{{ $value ?? __('—') }}</dd>
+                                <dd class="text-sm">{{ $value ?? __('â€”') }}</dd>
                             </div>
                         @endforeach
                     </dl>
@@ -105,7 +105,7 @@
                         @foreach ($personal as $label => $value)
                             <div class="flex flex-col gap-1">
                                 <dt class="text-xs font-medium uppercase tracking-wide text-muted-foreground">{{ $label }}</dt>
-                                <dd class="text-sm">{{ $value ?? __('—') }}</dd>
+                                <dd class="text-sm">{{ $value ?? __('â€”') }}</dd>
                             </div>
                         @endforeach
                     </dl>
@@ -127,7 +127,7 @@
                         @foreach ($contact as $label => $value)
                             <div class="flex flex-col gap-1">
                                 <dt class="text-xs font-medium uppercase tracking-wide text-muted-foreground">{{ $label }}</dt>
-                                <dd class="text-sm">{{ $value ?? __('—') }}</dd>
+                                <dd class="text-sm">{{ $value ?? __('â€”') }}</dd>
                             </div>
                         @endforeach
                     </dl>
@@ -150,7 +150,7 @@
                         @foreach ($legal as $label => $value)
                             <div class="flex flex-col gap-1">
                                 <dt class="text-xs font-medium uppercase tracking-wide text-muted-foreground">{{ $label }}</dt>
-                                <dd class="text-sm">{{ $value ?? __('—') }}</dd>
+                                <dd class="text-sm">{{ $value ?? __('â€”') }}</dd>
                             </div>
                         @endforeach
                     </dl>
@@ -169,12 +169,56 @@
                         @foreach ($emergency as $label => $value)
                             <div class="flex flex-col gap-1">
                                 <dt class="text-xs font-medium uppercase tracking-wide text-muted-foreground">{{ $label }}</dt>
-                                <dd class="text-sm">{{ $value ?? __('—') }}</dd>
+                                <dd class="text-sm">{{ $value ?? __('â€”') }}</dd>
                             </div>
                         @endforeach
                     </dl>
                 </x-ui.tabs-content>
             </x-ui.card>
         </x-ui.tabs>
+
+        @can('development-programs.view')
+            <x-ui.card>
+                <x-ui.card-header>
+                    <x-ui.card-title>{{ __('Development history') }}</x-ui.card-title>
+                    <x-ui.card-description>{{ __('Programs this employee has enrolled in.') }}</x-ui.card-description>
+                </x-ui.card-header>
+                <x-ui.card-content>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm">
+                            <thead>
+                                <tr class="border-b text-left text-xs uppercase tracking-wide text-muted-foreground">
+                                    <th class="px-4 py-3 font-medium">{{ __('Program') }}</th>
+                                    <th class="px-4 py-3 font-medium">{{ __('Type') }}</th>
+                                    <th class="px-4 py-3 font-medium">{{ __('Dates') }}</th>
+                                    <th class="px-4 py-3 font-medium">{{ __('Status') }}</th>
+                                    <th class="px-4 py-3 text-right font-medium">{{ __('Score') }}</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y">
+                                @forelse ($employee->developmentEnrollments as $enrollment)
+                                    <tr class="hover:bg-accent/50">
+                                        <td class="px-4 py-3">
+                                            <a href="{{ route('development-programs.show', $enrollment->program) }}" class="font-medium hover:underline">{{ $enrollment->program?->name ?? __('—') }}</a>
+                                            <span class="font-mono text-xs text-muted-foreground">{{ $enrollment->program?->code }}</span>
+                                        </td>
+                                        <td class="px-4 py-3 text-muted-foreground">{{ $enrollment->program?->typeLabel() ?? __('—') }}</td>
+                                        <td class="px-4 py-3 text-muted-foreground">{{ $enrollment->program?->start_date?->format('d M Y') }} – {{ $enrollment->program?->end_date?->format('d M Y') }}</td>
+                                        <td class="px-4 py-3">
+                                            <x-ui.badge variant="outline">{{ $enrollment->status }}</x-ui.badge>
+                                        </td>
+                                        <td class="px-4 py-3 text-right text-muted-foreground">{{ $enrollment->score ?? __('—') }}</td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="5" class="px-4 py-8 text-center text-muted-foreground">{{ __('No development history.') }}</td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+                </x-ui.card-content>
+            </x-ui.card>
+        @endcan
     </div>
 </x-app-layout>

@@ -30,6 +30,7 @@ function gradeMatrixPayload(Role $makerRole, Role $approverRole): array
     return [
         'module_key' => 'grades',
         'is_active' => '1',
+        'mode' => 'sequential',
         'maker_roles' => [$makerRole->id],
         'stages' => [
             ['stage_number' => 1, 'name' => 'Manager Approval', 'role_ids' => [$approverRole->id]],
@@ -61,7 +62,28 @@ test('approval matrix index lists supported grade configuration status', functio
         ->assertOk()
         ->assertSee('Grades')
         ->assertSee('Not configured')
-        ->assertSee('Configure');
+        ->assertSee('Configure')
+        ->assertDontSee('Save mode');
+});
+
+test('approval matrix stores a per-module approval mode', function () {
+    $payload = gradeMatrixPayload($this->makerRole, $this->approverRole);
+    $payload['mode'] = 'parallel';
+
+    $this->put(route('approval-matrices.update', 'grades'), $payload)
+        ->assertRedirect(route('approval-matrices.index'));
+
+    $this->assertDatabaseHas('approval_matrices', ['module_key' => 'grades', 'mode' => 'parallel']);
+
+    $this->get(route('approval-matrices.edit', 'grades'))
+        ->assertOk()
+        ->assertSee("value='parallel' checked", false)
+        ->assertDontSee("value='sequential' checked", false);
+
+    $this->put(route('approval-matrices.update', 'grades'), [...$payload, 'mode' => 'sideways'])
+        ->assertSessionHasErrors('mode');
+
+    expect(ApprovalMatrix::query()->where('module_key', 'grades')->sole()->mode)->toBe('parallel');
 });
 
 test('approval matrix index lists every supported module in sidebar order', function () {
@@ -81,12 +103,16 @@ test('approval matrix index lists every supported module in sidebar order', func
         'departments',
         'org-units',
         'positions',
+        'development-programs',
         'grades',
         'employment-statuses',
-        'work-locations',
+        'sites',
         'religions',
         'education-levels',
         'marital-statuses',
+        'benefits',
+        'benefit-enrollments',
+        'benefit-claims',
     ]);
 
     $response = $this->get(route('approval-matrices.index'))->assertOk();
@@ -100,6 +126,7 @@ test('every supported module stores its own matrix configuration', function (str
     $this->put(route('approval-matrices.update', $moduleKey), [
         'module_key' => $moduleKey,
         'is_active' => '1',
+        'mode' => 'sequential',
         'maker_roles' => [$this->makerRole->id],
         'stages' => [
             ['stage_number' => 1, 'name' => 'Approval', 'role_ids' => [$this->approverRole->id]],
@@ -128,12 +155,16 @@ test('every supported module stores its own matrix configuration', function (str
     'departments',
     'org-units',
     'positions',
+    'development-programs',
     'grades',
     'employment-statuses',
-    'work-locations',
+    'sites',
     'religions',
     'education-levels',
     'marital-statuses',
+    'benefits',
+    'benefit-enrollments',
+    'benefit-claims',
 ]);
 
 test('approval matrix editor renders the stage builder for authorized admins', function () {
@@ -151,6 +182,7 @@ test('approval matrix editor rejects unsupported modules', function () {
     $this->put(route('approval-matrices.update', 'grades'), [
         'module_key' => 'audit-logs',
         'is_active' => '1',
+        'mode' => 'sequential',
         'maker_roles' => [$this->makerRole->id],
         'stages' => [['stage_number' => 1, 'name' => 'Approval', 'role_ids' => [$this->approverRole->id]]],
     ])->assertSessionHasErrors('module_key');
@@ -160,6 +192,7 @@ test('approval matrix requires maker roles and valid stages', function () {
     $this->put(route('approval-matrices.update', 'grades'), [
         'module_key' => 'grades',
         'is_active' => '1',
+        'mode' => 'sequential',
         'maker_roles' => [],
         'stages' => [
             ['stage_number' => 3, 'name' => '', 'role_ids' => []],
@@ -189,6 +222,7 @@ test('saving an approval matrix atomically replaces its assignments', function (
     $this->put(route('approval-matrices.update', 'grades'), [
         'module_key' => 'grades',
         'is_active' => '1',
+        'mode' => 'sequential',
         'maker_roles' => [$this->makerRole->id],
         'stages' => [
             ['stage_number' => 1, 'name' => 'First Approval', 'role_ids' => [$this->approverRole->id]],

@@ -28,6 +28,10 @@ class ApprovalRequest extends Model
 
     public const ACTION_DELETE = 'delete';
 
+    public const MODE_SEQUENTIAL = 'sequential';
+
+    public const MODE_PARALLEL = 'parallel';
+
     protected $fillable = [
         'module_key',
         'action',
@@ -39,6 +43,7 @@ class ApprovalRequest extends Model
         'status',
         'current_stage',
         'matrix_configuration_version',
+        'approval_mode',
         'resolution_comment',
         'submitted_at',
         'approved_at',
@@ -94,6 +99,16 @@ class ApprovalRequest extends Model
     public function isPending(): bool
     {
         return $this->status === self::STATUS_PENDING;
+    }
+
+    public function isParallel(): bool
+    {
+        return ($this->approval_mode ?? self::MODE_SEQUENTIAL) === self::MODE_PARALLEL;
+    }
+
+    public function isSequential(): bool
+    {
+        return ! $this->isParallel();
     }
 
     public function statusVariant(): string

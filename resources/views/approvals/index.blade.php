@@ -67,7 +67,7 @@
                     <td class='px-4 py-3'>{{ $modules[$approvalRequest->module_key]->label() }}</td>
                     <td class='px-4 py-3'>{{ $approvalRequest->actionLabel() }}</td>
                     <td class='px-4 py-3'>{{ $approvalRequest->maker_snapshot['name'] ?? $approvalRequest->maker?->name ?? '—' }}</td>
-                    <td class='px-4 py-3 text-muted-foreground'>{{ $approvalRequest->currentStage()?->name ?? '—' }}</td>
+                    <td class='px-4 py-3 text-muted-foreground'>@if (($approvalRequest->approval_mode ?? 'sequential') === 'parallel' && $approvalRequest->status === 'Pending') {{ __('Parallel · :count pending', ['count' => $approvalRequest->stages->where('status', 'Pending')->count()]) }} @else {{ $approvalRequest->currentStage()?->name ?? '—' }} @endif</td>
                     <td class='px-4 py-3'><x-ui.badge :variant='$approvalRequest->statusVariant()'>{{ $approvalRequest->status }}</x-ui.badge></td>
                     <td class='px-4 py-3 text-muted-foreground'>{{ $approvalRequest->submitted_at?->format('d M Y H:i') }}</td>
                     <td class='px-4 py-3 text-right'>

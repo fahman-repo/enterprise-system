@@ -28,11 +28,13 @@ function actingMenusAdmin(): array
 
 /**
  * The menus.index route requires the seeded 'menus' menu permission rows,
- * so replace them with deterministic rows instead of deleting them.
+ * so replace them with deterministic rows instead of deleting them. Menus
+ * inserted by migrations are pushed out of the sort range the pagination
+ * tests rely on, so those assertions stay independent of seeded data.
  */
 function neutralizeMenusSeed(): void
 {
-    Menu::query()->whereIn('slug', ['users', 'roles', 'menus'])->update([
+    Menu::query()->update([
         'name' => 'Keeper Menu',
         'sort_order' => 500,
     ]);

@@ -50,7 +50,7 @@ class EmployeeFactory extends Factory
             'org_unit_id' => null,
             'position_id' => null,
             'grade_id' => null,
-            'work_location_id' => null,
+            'site_id' => null,
             'employment_status_id' => null,
             'join_date' => fake()->dateTimeBetween('-10 years', 'now')->format('Y-m-d'),
             'end_date' => null,

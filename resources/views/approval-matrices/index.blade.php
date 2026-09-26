@@ -3,7 +3,7 @@
         <div class='flex flex-wrap items-end justify-between gap-4'>
             <div class='flex flex-col gap-1'>
                 <h1 class='text-xl font-semibold tracking-tight'>{{ __('Approval Matrix') }}</h1>
-                <p class='text-sm text-muted-foreground'>{{ __('Configure role-based makers and sequential approvers for each module.') }}</p>
+                <p class='text-sm text-muted-foreground'>{{ __('Configure role-based makers and approvers for each module.') }}</p>
             </div>
         </div>
 

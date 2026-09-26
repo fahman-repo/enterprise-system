@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Division;
 use App\Models\Employee;
-use App\Models\WorkLocation;
+use App\Models\Site;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -19,7 +19,7 @@ class OrgChartController extends Controller
     public function index(): View
     {
         return view('org-chart.index', [
-            'workLocations' => WorkLocation::query()
+            'sites' => Site::query()
                 ->where('is_active', true)
                 ->orderBy('name')
                 ->get(['id', 'name']),
@@ -33,15 +33,15 @@ class OrgChartController extends Controller
     {
         $data = $request->validate([
             'mode' => ['nullable', Rule::in(['structure', 'reporting'])],
-            'work_location_id' => ['nullable', Rule::exists('work_locations', 'id')],
+            'site_id' => ['nullable', Rule::exists('sites', 'id')],
         ]);
 
         $mode = $data['mode'] ?? 'structure';
-        $workLocationId = $data['work_location_id'] ?? null;
+        $siteId = $data['site_id'] ?? null;
 
         $employees = Employee::query()
             ->where('is_active', true)
-            ->when($workLocationId, fn ($query) => $query->where('work_location_id', $workLocationId))
+            ->when($siteId, fn ($query) => $query->where('site_id', $siteId))
             ->with(['position:id,name', 'grade:id,name'])
             ->get(['id', 'name', 'manager_id', 'division_id', 'department_id', 'org_unit_id', 'position_id', 'grade_id', 'photo_path']);
 
@@ -62,7 +62,7 @@ class OrgChartController extends Controller
     }
 
     /**
-     * Build the org-unit tree: company → divisions → departments →
+     * Build the org-unit tree: company â†’ divisions â†’ departments â†’
      * org units, with employees as leaves at their deepest placement.
      *
      * @param  Collection<int, Employee>  $employees
@@ -80,7 +80,7 @@ class OrgChartController extends Controller
                 type: 'division',
                 name: $division->name,
                 code: $division->code,
-                subtitle: __(':departments departments · :employees employees', [
+                subtitle: __(':departments departments Â· :employees employees', [
                     'departments' => $division->departments->count(),
                     'employees' => $employees->where('division_id', $division->id)->count(),
                 ]),
@@ -93,7 +93,7 @@ class OrgChartController extends Controller
                     type: 'department',
                     name: $department->name,
                     code: $department->code,
-                    subtitle: __(':units org units · :employees employees', [
+                    subtitle: __(':units org units Â· :employees employees', [
                         'units' => $department->orgUnits->count(),
                         'employees' => $employees->where('department_id', $department->id)->count(),
                     ]),
@@ -227,7 +227,7 @@ class OrgChartController extends Controller
     {
         $subtitle = collect([$employee->position?->name, $employee->grade?->name])
             ->filter()
-            ->join(' · ');
+            ->join(' Â· ');
 
         return [
             'id' => 'emp-'.$employee->id,

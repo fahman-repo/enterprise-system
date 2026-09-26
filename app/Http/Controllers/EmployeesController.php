@@ -14,8 +14,8 @@ use App\Models\MaritalStatus;
 use App\Models\OrgUnit;
 use App\Models\Position;
 use App\Models\Religion;
+use App\Models\Site;
 use App\Models\User;
-use App\Models\WorkLocation;
 use App\Services\ApprovalWorkflowService;
 use Illuminate\Contracts\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
@@ -77,7 +77,7 @@ class EmployeesController extends Controller
             'orgUnits' => OrgUnit::query()->orderBy('name')->get(),
             'positions' => Position::query()->orderBy('name')->get(),
             'employmentStatuses' => EmploymentStatus::query()->orderBy('sort_order')->get(),
-            'workLocations' => WorkLocation::query()->orderBy('name')->get(),
+            'sites' => Site::query()->active()->orderBy('name')->get(['id', 'name']),
         ]);
     }
 
@@ -97,8 +97,9 @@ class EmployeesController extends Controller
             'orgUnit',
             'position',
             'grade',
-            'workLocation',
+            'site',
             'employmentStatus',
+            'developmentEnrollments.program',
         ]);
 
         $employee->loadCount('reports');
@@ -276,7 +277,7 @@ class EmployeesController extends Controller
             'positions' => Position::query()->orderBy('name')->get(),
             'grades' => Grade::query()->orderBy('level')->get(),
             'employmentStatuses' => EmploymentStatus::query()->orderBy('sort_order')->get(),
-            'workLocations' => WorkLocation::query()->orderBy('name')->get(),
+            'sites' => Site::query()->active()->orderBy('name')->get(['id', 'name']),
             'religions' => Religion::query()->orderBy('sort_order')->get(),
             'educationLevels' => EducationLevel::query()->orderBy('level')->get(),
             'maritalStatuses' => MaritalStatus::query()->orderBy('sort_order')->get(),
@@ -322,7 +323,7 @@ class EmployeesController extends Controller
             'org_unit_id',
             'position_id',
             'employment_status_id',
-            'work_location_id',
+            'site_id',
         ];
 
         foreach ($placementFilters as $filter) {
@@ -377,7 +378,7 @@ class EmployeesController extends Controller
             'org_unit_id' => ['nullable', Rule::exists('org_units', 'id')->where('department_id', $request->integer('department_id'))],
             'position_id' => ['required', Rule::exists('positions', 'id')],
             'grade_id' => ['nullable', Rule::exists('grades', 'id')],
-            'work_location_id' => ['nullable', Rule::exists('work_locations', 'id')],
+            'site_id' => ['nullable', Rule::exists('sites', 'id')],
             'employment_status_id' => ['required', Rule::exists('employment_statuses', 'id')],
             'join_date' => ['required', 'date'],
             'end_date' => ['nullable', 'date', 'after_or_equal:join_date'],

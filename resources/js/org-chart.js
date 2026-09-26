@@ -95,11 +95,11 @@ function init(container) {
     const searchEmptyEl = document.querySelector('[data-org-chart-search-empty]');
     const searchForm = document.querySelector('[data-org-chart-search-form]');
     const searchInput = document.querySelector('[data-org-chart-search]');
-    const locationSelect = document.querySelector('[data-org-chart-location]');
+    const siteSelect = document.querySelector('[data-org-chart-location]');
     const modeButtons = [...document.querySelectorAll('[data-org-chart-mode]')];
 
     let mode = 'structure';
-    let workLocationId = '';
+    let siteId = '';
     let nodes = [];
     let chart = null;
 
@@ -155,8 +155,8 @@ function init(container) {
         searchEmptyEl.classList.add('hidden');
 
         const params = new URLSearchParams({ mode });
-        if (workLocationId) {
-            params.set('work_location_id', workLocationId);
+        if (siteId) {
+            params.set('site_id', siteId);
         }
 
         try {
@@ -189,8 +189,8 @@ function init(container) {
         });
     });
 
-    locationSelect.addEventListener('change', () => {
-        workLocationId = locationSelect.value;
+    siteSelect.addEventListener('change', () => {
+        siteId = siteSelect.value;
         load();
     });
 

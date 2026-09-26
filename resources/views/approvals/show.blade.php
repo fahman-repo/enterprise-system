@@ -121,6 +121,7 @@
                         <div><dt class='text-muted-foreground'>{{ __('Maker') }}</dt><dd class='font-medium'>{{ $request->maker_snapshot['name'] ?? $request->maker?->name ?? '—' }}</dd></div>
                         <div><dt class='text-muted-foreground'>{{ __('Submitted') }}</dt><dd>{{ $request->submitted_at?->format('d M Y H:i') }}</dd></div>
                         <div><dt class='text-muted-foreground'>{{ __('Matrix version') }}</dt><dd>{{ $request->matrix_configuration_version }}</dd></div>
+                        <div><dt class='text-muted-foreground'>{{ __('Mode') }}</dt><dd>{{ __(ucfirst($request->approval_mode ?? 'sequential')) }}</dd></div>
                         @if ($request->resolution_comment)
                             <div><dt class='text-muted-foreground'>{{ __('Resolution comment') }}</dt><dd>{{ $request->resolution_comment }}</dd></div>
                         @endif
@@ -134,7 +135,11 @@
                         >
                             <x-ui.card-header>
                                 <x-ui.card-title>{{ __('Record a decision') }}</x-ui.card-title>
-                                <x-ui.card-description>{{ __('Approval is optional-comment; rejection requires a comment.') }}</x-ui.card-description>
+                                @if (($request->approval_mode ?? 'sequential') === 'parallel')
+                                    <x-ui.card-description>{{ __('Any eligible approver from any pending stage can approve; the first approval completes the request.') }}</x-ui.card-description>
+                                @else
+                                    <x-ui.card-description>{{ __('Approval is optional-comment; rejection requires a comment.') }}</x-ui.card-description>
+                                @endif
                             </x-ui.card-header>
                             <x-ui.card-content class='flex gap-3'>
                                 <x-ui.button type='button' class='flex-1' x-on:click="decision = 'approve'">{{ __('Approve stage') }}</x-ui.button>

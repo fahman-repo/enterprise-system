@@ -54,6 +54,7 @@ class ApprovalMatricesController extends Controller
                 'role_ids' => collect($stage['role_ids'] ?? [])->map(fn ($roleId): int => (int) $roleId)->all(),
             ])->values()->all(),
             'makerRoles' => old('maker_roles', $matrix?->makerRoles->pluck('id')->all() ?? []),
+            'mode' => old('mode', $matrix?->mode ?? ApprovalMatrix::MODE_SEQUENTIAL),
         ]);
     }
 

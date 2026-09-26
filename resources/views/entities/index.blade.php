@@ -15,6 +15,54 @@
 
         @include('partials.flash')
 
+        {{-- Card links carry only display state. Role and type filters are deliberately dropped so a
+             card always selects its own filter, because applyTableFilters stops at the first match. --}}
+        @php
+            $summaryLinkParams = collect(request()->only(['search', 'sort', 'direction', 'per_page']))
+                ->filter(fn ($value) => $value !== null && $value !== '')
+                ->all();
+        @endphp
+
+        <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+            <x-stat-card
+                :label="__('Total entities')"
+                :value="number_format($summary['total'])"
+                icon="users"
+            />
+
+            <x-stat-card
+                :label="__('Active')"
+                :value="number_format($summary['active'])"
+                :caption="__('View active entities')"
+                icon="toggle-right"
+                :href="route('entities.index', array_merge($summaryLinkParams, ['status' => 'active']))"
+            />
+
+            <x-stat-card
+                :label="__('Inactive')"
+                :value="number_format($summary['inactive'])"
+                :caption="__('View inactive entities')"
+                icon="toggle-right"
+                :href="route('entities.index', array_merge($summaryLinkParams, ['status' => 'inactive']))"
+            />
+
+            <x-stat-card
+                :label="__('Vendors')"
+                :value="number_format($summary['vendors'])"
+                :caption="__('View vendors')"
+                icon="briefcase"
+                :href="route('entities.index', array_merge($summaryLinkParams, ['role' => 'vendor']))"
+            />
+
+            <x-stat-card
+                :label="__('Customers')"
+                :value="number_format($summary['customers'])"
+                :caption="__('View customers')"
+                icon="building-2"
+                :href="route('entities.index', array_merge($summaryLinkParams, ['role' => 'customer']))"
+            />
+        </div>
+
         @php
             $columns = [
                 ['key' => 'name', 'label' => __('Entity'), 'sortable' => true],

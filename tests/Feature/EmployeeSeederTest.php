@@ -14,7 +14,7 @@ use Database\Seeders\MaritalStatusSeeder;
 use Database\Seeders\OrgUnitSeeder;
 use Database\Seeders\PositionSeeder;
 use Database\Seeders\ReligionSeeder;
-use Database\Seeders\WorkLocationSeeder;
+use Database\Seeders\SiteSeeder;
 
 /**
  * Master data first, then the deterministic workforce.
@@ -30,7 +30,7 @@ function orgSeeders(): array
         GradeSeeder::class,
         PositionSeeder::class,
         EmploymentStatusSeeder::class,
-        WorkLocationSeeder::class,
+        SiteSeeder::class,
         ReligionSeeder::class,
         EducationLevelSeeder::class,
         MaritalStatusSeeder::class,

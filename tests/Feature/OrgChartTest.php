@@ -6,14 +6,17 @@ use App\Models\Employee;
 use App\Models\Menu;
 use App\Models\OrgUnit;
 use App\Models\Role;
+use App\Models\Site;
 use App\Models\User;
-use App\Models\WorkLocation;
 use App\Services\PermissionService;
 
 function actingOrgChartAdmin(): User
 {
     $role = Role::factory()->create();
-    $menu = Menu::factory()->create(['slug' => 'org-chart', 'route_name' => 'org-chart.index']);
+    $menu = Menu::query()->firstOrCreate(
+        ['slug' => 'org-chart'],
+        ['name' => 'Org Chart', 'route_name' => 'org-chart.index'],
+    );
 
     $role->menus()->sync([$menu->id => [
         'can_view' => true,
@@ -58,7 +61,7 @@ test('a user without view permission is forbidden from the org chart routes', fu
 });
 
 test('the org chart page renders the canvas and the location filter', function () {
-    WorkLocation::factory()->create(['name' => 'Head Office Jakarta']);
+    Site::factory()->branch()->create(['name' => 'Head Office Jakarta']);
 
     $this->get(route('org-chart.index'))
         ->assertOk()
@@ -118,15 +121,15 @@ test('reporting mode nests employees under their managers', function () {
 });
 
 test('reporting mode keeps manager chains connected across the location filter', function () {
-    $office = WorkLocation::factory()->create();
-    $remote = WorkLocation::factory()->create();
+    $office = Site::factory()->branch()->create();
+    $remote = Site::factory()->branch()->create();
 
-    $manager = Employee::factory()->create(['work_location_id' => $office->id]);
-    $report = Employee::factory()->reportsTo($manager)->create(['work_location_id' => $remote->id]);
+    $manager = Employee::factory()->create(['site_id' => $office->id]);
+    $report = Employee::factory()->reportsTo($manager)->create(['site_id' => $remote->id]);
 
     $nodes = $this->getJson(route('org-chart.data', [
         'mode' => 'reporting',
-        'work_location_id' => $remote->id,
+        'site_id' => $remote->id,
     ]))->json('nodes');
     $byId = collect($nodes)->keyBy('id');
 
@@ -136,21 +139,21 @@ test('reporting mode keeps manager chains connected across the location filter',
 });
 
 test('structure mode filters employees by work location and counts filtered leaves', function () {
-    $office = WorkLocation::factory()->create();
-    $remote = WorkLocation::factory()->create();
+    $office = Site::factory()->branch()->create();
+    $remote = Site::factory()->branch()->create();
 
     $division = Division::factory()->create();
     $department = Department::factory()->forDivision($division)->create();
     $unit = OrgUnit::factory()->forDepartment($department)->create();
 
     $local = Employee::factory()->create([
-        'work_location_id' => $office->id,
+        'site_id' => $office->id,
         'division_id' => $division->id,
         'department_id' => $department->id,
         'org_unit_id' => $unit->id,
     ]);
     $away = Employee::factory()->create([
-        'work_location_id' => $remote->id,
+        'site_id' => $remote->id,
         'division_id' => $division->id,
         'department_id' => $department->id,
         'org_unit_id' => $unit->id,
@@ -158,7 +161,7 @@ test('structure mode filters employees by work location and counts filtered leav
 
     $nodes = $this->getJson(route('org-chart.data', [
         'mode' => 'structure',
-        'work_location_id' => $office->id,
+        'site_id' => $office->id,
     ]))->json('nodes');
     $byId = collect($nodes)->keyBy('id');
 
