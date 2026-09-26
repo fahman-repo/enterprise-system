@@ -35,7 +35,47 @@
                 {{ __('Active') }}
             </label>
 
-            <div class="flex flex-col gap-3">
+            @php
+                $permissionFlags = [
+                    'can_view' => __('View'),
+                    'can_create' => __('Create'),
+                    'can_update' => __('Update'),
+                    'can_delete' => __('Delete'),
+                ];
+            @endphp
+
+            <div
+                class="flex flex-col gap-3"
+                x-data="{
+                    bodyBoxes(flag = null) {
+                        const boxes = Array.from(this.$root.querySelectorAll('tbody input[type=checkbox]'));
+
+                        return flag ? boxes.filter((box) => box.dataset.flag === flag) : boxes;
+                    },
+                    syncControl(control, boxes) {
+                        const checked = boxes.filter((box) => box.checked).length;
+
+                        control.checked = boxes.length > 0 && checked === boxes.length;
+                        control.indeterminate = checked > 0 && checked < boxes.length;
+                    },
+                    syncControls() {
+                        this.syncControl(this.$root.querySelector('[data-select-all]'), this.bodyBoxes());
+
+                        this.$root.querySelectorAll('[data-select-column]').forEach((control) => {
+                            this.syncControl(control, this.bodyBoxes(control.dataset.selectColumn));
+                        });
+                    },
+                    tickGroup(flag, checked) {
+                        this.bodyBoxes(flag).forEach((box) => {
+                            box.checked = checked;
+                        });
+
+                        this.syncControls();
+                    },
+                }"
+                x-init="syncControls()"
+                @change="syncControls()"
+            >
                 <div class="flex flex-col gap-1">
                     <x-ui.label>{{ __('Permissions') }}</x-ui.label>
                     <p class="text-sm text-muted-foreground">{{ __('Choose what this role can do in each active module.') }}</p>
@@ -45,11 +85,30 @@
                     <table class="w-full text-sm">
                         <thead>
                             <tr class="border-b bg-muted/50 text-left text-xs uppercase tracking-wide text-muted-foreground">
-                                <th class="px-4 py-3 font-medium">{{ __('Menu') }}</th>
-                                <th class="px-4 py-3 text-center font-medium">{{ __('View') }}</th>
-                                <th class="px-4 py-3 text-center font-medium">{{ __('Create') }}</th>
-                                <th class="px-4 py-3 text-center font-medium">{{ __('Update') }}</th>
-                                <th class="px-4 py-3 text-center font-medium">{{ __('Delete') }}</th>
+                                <th class="px-4 py-3 font-medium">
+                                    <div class="flex items-center gap-2">
+                                        <x-ui.checkbox
+                                            data-select-all
+                                            :disabled="$menus->isEmpty()"
+                                            aria-label="{{ __('Select all permissions') }}"
+                                            @change="tickGroup(null, $event.target.checked)"
+                                        />
+                                        {{ __('Menu') }}
+                                    </div>
+                                </th>
+                                @foreach ($permissionFlags as $flag => $label)
+                                    <th class="px-4 py-3 text-center font-medium">
+                                        <div class="flex items-center justify-center gap-2">
+                                            <x-ui.checkbox
+                                                data-select-column="{{ $flag }}"
+                                                :disabled="$menus->isEmpty()"
+                                                aria-label="{{ __('Select all :permission permissions', ['permission' => $label]) }}"
+                                                @change="tickGroup($event.target.dataset.selectColumn, $event.target.checked)"
+                                            />
+                                            {{ $label }}
+                                        </div>
+                                    </th>
+                                @endforeach
                             </tr>
                         </thead>
                         <tbody class="divide-y">
@@ -59,9 +118,10 @@
                                 @endphp
                                 <tr>
                                     <td class="px-4 py-2.5 font-medium">{{ $menu->name }}</td>
-                                    @foreach (['can_view', 'can_create', 'can_update', 'can_delete'] as $flag)
+                                    @foreach (array_keys($permissionFlags) as $flag)
                                         <td class="px-4 py-2.5 text-center">
                                             <x-ui.checkbox
+                                                data-flag="{{ $flag }}"
                                                 name="permissions[{{ $menu->id }}][{{ $flag }}]"
                                                 value="1"
                                                 :checked="(bool) ($flags?->{$flag} ?? false)"

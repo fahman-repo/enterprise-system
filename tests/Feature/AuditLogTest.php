@@ -308,6 +308,29 @@ test('audit log detail shows the before and after diff', function () {
         ->assertSee('After');
 });
 
+test('audit log index includes approval workflow events', function () {
+    [$admin] = actingAuditAdmin();
+    $this->actingAs($admin);
+
+    Activity::query()->create([
+        'log_name' => 'approval',
+        'description' => 'Approval request submitted.',
+        'event' => 'submitted',
+        'properties' => [],
+    ]);
+    Activity::query()->create([
+        'log_name' => 'approval',
+        'description' => 'Approval request decision recorded.',
+        'event' => 'approved',
+        'properties' => [],
+    ]);
+
+    $this->get(route('audit-logs.index'))
+        ->assertOk()
+        ->assertSee('Submitted')
+        ->assertSee('Approved');
+});
+
 test('audit log detail renders role permission changes', function () {
     [$admin] = actingAuditAdmin();
     $this->actingAs($admin);

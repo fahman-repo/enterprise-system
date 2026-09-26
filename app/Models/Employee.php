@@ -3,10 +3,12 @@
 namespace App\Models;
 
 use App\Models\Concerns\Auditable;
+use Closure;
 use Database\Factories\EmployeeFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Storage;
 
@@ -24,6 +26,7 @@ class Employee extends Model
 
     protected $fillable = [
         'user_id',
+        'manager_id',
         'employee_number',
         'name',
         'gender',
@@ -66,6 +69,7 @@ class Employee extends Model
     {
         return [
             'user_id' => 'integer',
+            'manager_id' => 'integer',
             'birth_date' => 'date',
             'religion_id' => 'integer',
             'marital_status_id' => 'integer',
@@ -92,6 +96,16 @@ class Employee extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function manager(): BelongsTo
+    {
+        return $this->belongsTo(Employee::class, 'manager_id');
+    }
+
+    public function reports(): HasMany
+    {
+        return $this->hasMany(Employee::class, 'manager_id');
     }
 
     public function religion(): BelongsTo
@@ -156,6 +170,36 @@ class Employee extends Model
     public function photoUrl(): ?string
     {
         return $this->photo_path ? Storage::disk('public')->url($this->photo_path) : null;
+    }
+
+    /**
+     * Validation rule rejecting self-management and reporting cycles.
+     */
+    public static function managerCycleRule(?Employee $employee): Closure
+    {
+        return function (string $attribute, mixed $value, Closure $fail) use ($employee): void {
+            if ($employee === null) {
+                return;
+            }
+
+            if ((int) $value === $employee->id) {
+                $fail(__('An employee cannot be their own manager.'));
+
+                return;
+            }
+
+            $manager = Employee::query()->find((int) $value);
+
+            for ($hop = 0; $manager !== null && $hop < 100; $hop++) {
+                if ($manager->manager_id === $employee->id) {
+                    $fail(__('This manager would create a circular reporting line.'));
+
+                    return;
+                }
+
+                $manager = $manager->manager;
+            }
+        };
     }
 
     /**

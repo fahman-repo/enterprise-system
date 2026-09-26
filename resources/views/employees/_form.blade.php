@@ -113,6 +113,18 @@
                     </div>
 
                     <div class="flex flex-col gap-2">
+                        <x-ui.label for="manager_id">{{ __('Direct manager') }}</x-ui.label>
+                        <x-ui.select id="manager_id" name="manager_id">
+                            <option value="">{{ __('No manager (top of reporting line)') }}</option>
+                            @foreach ($managers as $manager)
+                                <option value="{{ $manager->id }}" @selected((string) old('manager_id', $employee?->manager_id) === (string) $manager->id)>
+                                    {{ $manager->name }} ({{ $manager->employee_number }})
+                                </option>
+                            @endforeach
+                        </x-ui.select>
+                    </div>
+
+                    <div class="flex flex-col gap-2">
                         <x-ui.label for="work_location_id">{{ __('Work location') }}</x-ui.label>
                         <x-ui.select id="work_location_id" name="work_location_id">
                             <option value="">{{ __('No work location') }}</option>

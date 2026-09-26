@@ -18,6 +18,9 @@ class DivisionSeeder extends Seeder
             ['code' => 'DIV-OPS', 'name' => 'Operations', 'description' => 'Production and day-to-day operational activities.'],
             ['code' => 'DIV-COM', 'name' => 'Commercial', 'description' => 'Sales and marketing.'],
             ['code' => 'DIV-IT', 'name' => 'Information Technology', 'description' => 'Technology infrastructure and software delivery.'],
+            ['code' => 'DIV-MFG', 'name' => 'Manufacturing', 'description' => 'Assembly, fabrication and process engineering.'],
+            ['code' => 'DIV-QA', 'name' => 'Quality Assurance & HSE', 'description' => 'Quality systems, quality control and workplace safety.'],
+            ['code' => 'DIV-COR', 'name' => 'Corporate Affairs', 'description' => 'Legal, compliance and corporate communications.'],
         ];
 
         foreach ($divisions as $attributes) {

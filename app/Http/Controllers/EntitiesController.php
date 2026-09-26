@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Concerns\InteractsWithDataTable;
+use App\Models\ApprovalRequest;
 use App\Models\Entity;
+use App\Services\ApprovalWorkflowService;
 use Illuminate\Contracts\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -70,9 +72,19 @@ class EntitiesController extends Controller
     /**
      * Store a newly created entity.
      */
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request, ApprovalWorkflowService $workflow): RedirectResponse
     {
         $data = $this->validated($request);
+
+        if ($workflow->isApprovalActive('entities')) {
+            if (blank($data['code'] ?? null)) {
+                unset($data['code']);
+            }
+
+            $workflow->submit($request->user(), 'entities', ApprovalRequest::ACTION_CREATE, null, $data);
+
+            return redirect()->route('entities.index')->with('status', __('Entity change request submitted for approval.'));
+        }
 
         DB::transaction(function () use (&$data): void {
             if (blank($data['code'] ?? null)) {
@@ -96,9 +108,19 @@ class EntitiesController extends Controller
     /**
      * Update the specified entity.
      */
-    public function update(Request $request, Entity $entity): RedirectResponse
+    public function update(Request $request, Entity $entity, ApprovalWorkflowService $workflow): RedirectResponse
     {
         $data = $this->validated($request, $entity);
+
+        if ($workflow->isApprovalActive('entities')) {
+            if (blank($data['code'] ?? null)) {
+                $data['code'] = $entity->code;
+            }
+
+            $workflow->submit($request->user(), 'entities', ApprovalRequest::ACTION_UPDATE, $entity->id, $data);
+
+            return redirect()->route('entities.index')->with('status', __('Entity change request submitted for approval.'));
+        }
 
         if (blank($data['code'] ?? null)) {
             unset($data['code']);
@@ -112,8 +134,14 @@ class EntitiesController extends Controller
     /**
      * Soft delete the specified entity.
      */
-    public function destroy(Entity $entity): RedirectResponse
+    public function destroy(Entity $entity, ApprovalWorkflowService $workflow): RedirectResponse
     {
+        if ($workflow->isApprovalActive('entities')) {
+            $workflow->submit(request()->user(), 'entities', ApprovalRequest::ACTION_DELETE, $entity->id, []);
+
+            return redirect()->route('entities.index')->with('status', __('Entity change request submitted for approval.'));
+        }
+
         $entity->delete();
 
         return redirect()->route('entities.index')->with('status', __('Entity deleted.'));

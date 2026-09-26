@@ -146,6 +146,94 @@ test('employees index applies only the first placement filter', function () {
         ->assertDontSee($inOtherDepartment->name);
 });
 
+test('employees index shows headcount summary cards', function () {
+    $division = Division::factory()->create();
+    $department = Department::factory()->forDivision($division)->create();
+
+    Employee::factory()->forDepartment($department)->count(2)->create(['is_active' => true]);
+    Employee::factory()->inactive()->create();
+
+    $this->get(route('employees.index'))
+        ->assertOk()
+        ->assertViewHas('summary', fn (array $summary) => $summary['total'] === 3
+            && $summary['active'] === 2
+            && $summary['inactive'] === 1
+            && $summary['divisions'] === 1
+            && $summary['departments'] === 1);
+});
+
+test('employees index summary ignores the search and filters', function () {
+    $division = Division::factory()->create();
+    $department = Department::factory()->forDivision($division)->create();
+    Employee::factory()->forDepartment($department)->create(['name' => 'Quixotic First']);
+    Employee::factory()->create(['name' => 'Elsewhere Person']);
+
+    $this->get(route('employees.index', ['search' => 'Quixotic First']))
+        ->assertOk()
+        ->assertViewHas('summary', fn (array $summary) => $summary['total'] === 2);
+
+    $this->get(route('employees.index', ['division_id' => $division->id]))
+        ->assertOk()
+        ->assertViewHas('summary', fn (array $summary) => $summary['total'] === 2);
+});
+
+test('employees index excludes soft deleted employees from the summary', function () {
+    Employee::factory()->create()->delete();
+
+    $this->get(route('employees.index'))
+        ->assertOk()
+        ->assertViewHas('summary', fn (array $summary) => $summary['total'] === 0);
+});
+
+test('employees index links the status cards to the status filter', function () {
+    $this->get(route('employees.index'))
+        ->assertOk()
+        // Use the default escaping: Blade renders & as &amp;, and assertSee escapes the expected
+        // value the same way. Passing false would search for a raw & that is not in the markup.
+        ->assertSee(route('employees.index', ['status' => 'active']))
+        ->assertSee(route('employees.index', ['status' => 'inactive']))
+        ->assertSee(__('View active employees'))
+        ->assertSee(__('View inactive employees'));
+});
+
+test('employees index status link filters the table', function () {
+    Employee::factory()->inactive()->create(['name' => 'Quixotic Inactive']);
+    Employee::factory()->create(['name' => 'Quixotic Active']);
+
+    $this->get(route('employees.index', ['status' => 'inactive']))
+        ->assertOk()
+        ->assertSee('Quixotic Inactive')
+        ->assertDontSee('Quixotic Active');
+});
+
+test('employees index status card link wins over an active placement filter', function () {
+    $division = Division::factory()->create();
+    $department = Department::factory()->forDivision($division)->create();
+    Employee::factory()->forDepartment($department)->create(['name' => 'Quixotic In Division']);
+    Employee::factory()->inactive()->create(['name' => 'Quixotic Inactive Elsewhere']);
+
+    // The card drops the placement filter, so status is applied instead of being ignored.
+    $this->get(route('employees.index', ['division_id' => $division->id]))
+        ->assertOk()
+        ->assertSee(route('employees.index', ['status' => 'inactive']))
+        ->assertDontSee(route('employees.index', ['division_id' => $division->id, 'status' => 'inactive']));
+
+    // Sorting and per-page survive the link; the placement filter does not.
+    $this->get(route('employees.index', [
+        'sort' => 'name',
+        'direction' => 'desc',
+        'per_page' => 50,
+        'division_id' => $division->id,
+    ]))
+        ->assertOk()
+        ->assertSee(route('employees.index', [
+            'sort' => 'name',
+            'direction' => 'desc',
+            'per_page' => 50,
+            'status' => 'inactive',
+        ]));
+});
+
 test('admin can create an employee and the number is generated', function () {
     $this->post(route('employees.store'), employeePayload())
         ->assertRedirect(route('employees.index'));
@@ -298,4 +386,34 @@ test('admin can soft delete an employee', function () {
     $this->assertSoftDeleted($employee);
 
     $this->get(route('employees.index'))->assertDontSee('Doomed Employee');
+});
+
+test('admin can assign a direct manager on update', function () {
+    $manager = Employee::factory()->create();
+    $employee = Employee::factory()->create();
+
+    $this->put(route('employees.update', $employee), employeePayload(['manager_id' => $manager->id]))
+        ->assertRedirect(route('employees.index'));
+
+    expect($employee->fresh()->manager_id)->toBe($manager->id);
+});
+
+test('an employee cannot be their own manager', function () {
+    $employee = Employee::factory()->create();
+
+    $this->put(route('employees.update', $employee), employeePayload(['manager_id' => $employee->id]))
+        ->assertSessionHasErrors('manager_id');
+
+    expect($employee->fresh()->manager_id)->toBeNull();
+});
+
+test('a manager assignment cannot create a circular reporting line', function () {
+    $manager = Employee::factory()->create();
+    $employee = Employee::factory()->reportsTo($manager)->create();
+
+    $this->put(route('employees.update', $manager), employeePayload(['manager_id' => $employee->id]))
+        ->assertSessionHasErrors('manager_id');
+
+    expect($manager->fresh()->manager_id)->toBeNull()
+        ->and($employee->fresh()->manager_id)->toBe($manager->id);
 });

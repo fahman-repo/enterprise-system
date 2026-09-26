@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Concerns\InteractsWithDataTable;
+use App\Models\ApprovalRequest;
 use App\Models\EmploymentStatus;
+use App\Services\ApprovalWorkflowService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -56,9 +58,19 @@ class EmploymentStatusesController extends Controller
     /**
      * Store a newly created employment status.
      */
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request, ApprovalWorkflowService $workflow): RedirectResponse
     {
-        EmploymentStatus::create($this->validated($request));
+        $data = $this->validated($request);
+
+        if ($workflow->isApprovalActive('employment-statuses')) {
+            $workflow->submit($request->user(), 'employment-statuses', ApprovalRequest::ACTION_CREATE, null, $data);
+
+            return redirect()
+                ->route('employment-statuses.index')
+                ->with('status', __('Employment Status change request submitted for approval.'));
+        }
+
+        EmploymentStatus::create($data);
 
         return redirect()->route('employment-statuses.index')->with('status', __('Employment status created.'));
     }
@@ -74,9 +86,19 @@ class EmploymentStatusesController extends Controller
     /**
      * Update the specified employment status.
      */
-    public function update(Request $request, EmploymentStatus $employmentStatus): RedirectResponse
+    public function update(Request $request, EmploymentStatus $employmentStatus, ApprovalWorkflowService $workflow): RedirectResponse
     {
-        $employmentStatus->update($this->validated($request, $employmentStatus));
+        $data = $this->validated($request, $employmentStatus);
+
+        if ($workflow->isApprovalActive('employment-statuses')) {
+            $workflow->submit($request->user(), 'employment-statuses', ApprovalRequest::ACTION_UPDATE, $employmentStatus->id, $data);
+
+            return redirect()
+                ->route('employment-statuses.index')
+                ->with('status', __('Employment Status change request submitted for approval.'));
+        }
+
+        $employmentStatus->update($data);
 
         return redirect()->route('employment-statuses.index')->with('status', __('Employment status updated.'));
     }
@@ -84,10 +106,18 @@ class EmploymentStatusesController extends Controller
     /**
      * Remove the employment status; statuses assigned to employees cannot be deleted.
      */
-    public function destroy(EmploymentStatus $employmentStatus): RedirectResponse
+    public function destroy(EmploymentStatus $employmentStatus, ApprovalWorkflowService $workflow): RedirectResponse
     {
         if ($employmentStatus->employees()->exists()) {
             return back()->withErrors(['employment_status' => __('This employment status is assigned to employees and cannot be deleted.')]);
+        }
+
+        if ($workflow->isApprovalActive('employment-statuses')) {
+            $workflow->submit(request()->user(), 'employment-statuses', ApprovalRequest::ACTION_DELETE, $employmentStatus->id, []);
+
+            return redirect()
+                ->route('employment-statuses.index')
+                ->with('status', __('Employment Status change request submitted for approval.'));
         }
 
         $employmentStatus->delete();

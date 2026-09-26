@@ -20,6 +20,7 @@ class EmployeeFactory extends Factory
     {
         return [
             'user_id' => null,
+            'manager_id' => null,
             'employee_number' => strtoupper(fake()->unique()->bothify('EMP-#####')),
             'name' => fake()->name(),
             'gender' => fake()->randomElement(Employee::GENDERS),
@@ -77,6 +78,16 @@ class EmployeeFactory extends Factory
         return $this->state(fn (array $attributes) => [
             'division_id' => $department->division_id,
             'department_id' => $department->id,
+        ]);
+    }
+
+    /**
+     * Put the employee under the given manager in the reporting line.
+     */
+    public function reportsTo(Employee $manager): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'manager_id' => $manager->id,
         ]);
     }
 }

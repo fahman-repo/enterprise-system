@@ -70,6 +70,8 @@
                             __('Grade') => $employee->grade?->name,
                             __('Work location') => $employee->workLocation?->name,
                             __('Employment status') => $employee->employmentStatus?->name,
+                            __('Direct manager') => $employee->manager?->name,
+                            __('Direct reports') => (string) $employee->reports_count,
                             __('Linked user') => $employee->user?->email,
                             __('Join date') => $employee->join_date?->format('d M Y'),
                             __('Probation end') => $employee->probation_end_date?->format('d M Y'),

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Concerns\InteractsWithDataTable;
+use App\Models\ApprovalRequest;
 use App\Models\Department;
 use App\Models\Division;
 use App\Models\EducationLevel;
@@ -15,12 +16,14 @@ use App\Models\Position;
 use App\Models\Religion;
 use App\Models\User;
 use App\Models\WorkLocation;
+use App\Services\ApprovalWorkflowService;
 use Illuminate\Contracts\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
 class EmployeesController extends Controller
@@ -66,6 +69,7 @@ class EmployeesController extends Controller
 
         return view('employees.index', [
             'employees' => $employees,
+            'summary' => $this->summary(),
             'sort' => $sort,
             'direction' => $direction,
             'divisions' => Division::query()->orderBy('name')->get(),
@@ -84,6 +88,7 @@ class EmployeesController extends Controller
     {
         $employee->load([
             'user',
+            'manager:id,name',
             'religion',
             'maritalStatus',
             'educationLevel',
@@ -95,6 +100,8 @@ class EmployeesController extends Controller
             'workLocation',
             'employmentStatus',
         ]);
+
+        $employee->loadCount('reports');
 
         return view('employees.show', ['employee' => $employee]);
     }
@@ -110,9 +117,36 @@ class EmployeesController extends Controller
     /**
      * Store a newly created employee.
      */
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request, ApprovalWorkflowService $workflow): RedirectResponse
     {
         $data = $this->validated($request);
+
+        if ($workflow->isApprovalActive('employees')) {
+            if (blank($data['employee_number'] ?? null)) {
+                unset($data['employee_number']);
+            }
+
+            unset($data['photo'], $data['remove_photo']);
+
+            $storedPath = null;
+
+            if ($photo = $request->file('photo')) {
+                $data['photo_path'] = $storedPath = $photo->store('employees', 'public');
+            }
+
+            try {
+                $workflow->submit($request->user(), 'employees', ApprovalRequest::ACTION_CREATE, null, $data);
+            } catch (ValidationException $exception) {
+                if ($storedPath !== null) {
+                    Storage::disk('public')->delete($storedPath);
+                }
+
+                throw $exception;
+            }
+
+            return redirect()->route('employees.index')
+                ->with('status', __('Employee change request submitted for approval.'));
+        }
 
         DB::transaction(function () use ($request, &$data): void {
             if (blank($data['employee_number'] ?? null)) {
@@ -145,9 +179,42 @@ class EmployeesController extends Controller
     /**
      * Update the specified employee.
      */
-    public function update(Request $request, Employee $employee): RedirectResponse
+    public function update(Request $request, Employee $employee, ApprovalWorkflowService $workflow): RedirectResponse
     {
         $data = $this->validated($request, $employee);
+
+        if ($workflow->isApprovalActive('employees')) {
+            unset($data['photo'], $data['remove_photo']);
+
+            if (blank($data['employee_number'] ?? null)) {
+                $data['employee_number'] = $employee->employee_number;
+            }
+
+            $data['photo_path'] = $employee->photo_path;
+
+            if ($request->boolean('remove_photo')) {
+                $data['photo_path'] = null;
+            }
+
+            $storedPath = null;
+
+            if ($photo = $request->file('photo')) {
+                $data['photo_path'] = $storedPath = $photo->store('employees', 'public');
+            }
+
+            try {
+                $workflow->submit($request->user(), 'employees', ApprovalRequest::ACTION_UPDATE, $employee->id, $data);
+            } catch (ValidationException $exception) {
+                if ($storedPath !== null) {
+                    Storage::disk('public')->delete($storedPath);
+                }
+
+                throw $exception;
+            }
+
+            return redirect()->route('employees.index')
+                ->with('status', __('Employee change request submitted for approval.'));
+        }
 
         if (blank($data['employee_number'] ?? null)) {
             unset($data['employee_number']);
@@ -176,8 +243,15 @@ class EmployeesController extends Controller
     /**
      * Soft delete the employee; the photo is kept for audit.
      */
-    public function destroy(Employee $employee): RedirectResponse
+    public function destroy(Employee $employee, ApprovalWorkflowService $workflow): RedirectResponse
     {
+        if ($workflow->isApprovalActive('employees')) {
+            $workflow->submit(request()->user(), 'employees', ApprovalRequest::ACTION_DELETE, $employee->id, []);
+
+            return redirect()->route('employees.index')
+                ->with('status', __('Employee change request submitted for approval.'));
+        }
+
         $employee->delete();
 
         return redirect()->route('employees.index')->with('status', __('Employee deleted.'));
@@ -207,6 +281,30 @@ class EmployeesController extends Controller
             'educationLevels' => EducationLevel::query()->orderBy('level')->get(),
             'maritalStatuses' => MaritalStatus::query()->orderBy('sort_order')->get(),
             'users' => User::query()->whereNotIn('id', $linkedUserIds)->orderBy('name')->get(),
+            'managers' => Employee::query()
+                ->where('is_active', true)
+                ->when($employee !== null, fn (Builder $query) => $query->where('id', '!=', $employee->id))
+                ->orderBy('name')
+                ->get(['id', 'name', 'employee_number']),
+        ];
+    }
+
+    /**
+     * Headline counts for the summary cards.
+     *
+     * Deliberately independent of the listing query so the figures always
+     * describe the whole table, never the current search or filters.
+     *
+     * @return array{total: int, active: int, inactive: int, divisions: int, departments: int}
+     */
+    protected function summary(): array
+    {
+        return [
+            'total' => Employee::query()->count(),
+            'active' => Employee::query()->where('is_active', true)->count(),
+            'inactive' => Employee::query()->where('is_active', false)->count(),
+            'divisions' => Division::query()->whereHas('employees')->count(),
+            'departments' => Department::query()->whereHas('employees')->count(),
         ];
     }
 
@@ -249,6 +347,7 @@ class EmployeesController extends Controller
     {
         $data = $request->validate([
             'user_id' => ['nullable', Rule::exists('users', 'id'), Rule::unique('employees', 'user_id')->ignore($employee?->id)],
+            'manager_id' => ['nullable', Rule::exists('employees', 'id')->whereNull('deleted_at'), Employee::managerCycleRule($employee)],
             'employee_number' => ['nullable', 'string', 'max:255', 'alpha_dash', Rule::unique('employees', 'employee_number')->ignore($employee?->id)],
             'name' => ['required', 'string', 'max:255'],
             'gender' => ['required', Rule::in(Employee::GENDERS)],

@@ -23,6 +23,9 @@ class Activity extends SpatieActivity
             'updated', 'logout' => 'secondary',
             'deleted' => 'destructive',
             'failed_login' => 'destructive',
+            'submitted', 'configuration_replaced' => 'secondary',
+            'approved', 'stage_approved' => 'success',
+            'rejected', 'cancelled' => 'destructive',
             default => 'muted',
         };
     }
@@ -39,6 +42,12 @@ class Activity extends SpatieActivity
             'login' => __('Logged in'),
             'logout' => __('Logged out'),
             'failed_login' => __('Failed login'),
+            'submitted' => __('Submitted'),
+            'configuration_replaced' => __('Configuration replaced'),
+            'stage_approved' => __('Stage approved'),
+            'approved' => __('Approved'),
+            'rejected' => __('Rejected'),
+            'cancelled' => __('Cancelled'),
             default => $this->event ?? __('Activity'),
         };
     }

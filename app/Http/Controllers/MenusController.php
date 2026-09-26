@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Concerns\InteractsWithDataTable;
+use App\Models\ApprovalRequest;
 use App\Models\Menu;
+use App\Services\ApprovalWorkflowService;
 use Closure;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -53,15 +55,23 @@ class MenusController extends Controller
      */
     public function create(): View
     {
-        return view('menus.create', ['parentOptions' => $this->parentOptions()]);
+        return view('menus.create', ['parentOptions' => Menu::parentOptions()]);
     }
 
     /**
      * Store a newly created menu item.
      */
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request, ApprovalWorkflowService $workflow): RedirectResponse
     {
-        Menu::create($this->validated($request));
+        $data = $this->validated($request);
+
+        if ($workflow->isApprovalActive('menus')) {
+            $workflow->submit($request->user(), 'menus', ApprovalRequest::ACTION_CREATE, null, $data);
+
+            return redirect()->route('menus.index')->with('status', __('Menu change request submitted for approval.'));
+        }
+
+        Menu::create($data);
 
         return redirect()->route('menus.index')->with('status', __('Menu created.'));
     }
@@ -73,16 +83,24 @@ class MenusController extends Controller
     {
         return view('menus.edit', [
             'menu' => $menu,
-            'parentOptions' => $this->parentOptions($menu),
+            'parentOptions' => Menu::parentOptions($menu),
         ]);
     }
 
     /**
      * Update the specified menu item.
      */
-    public function update(Request $request, Menu $menu): RedirectResponse
+    public function update(Request $request, Menu $menu, ApprovalWorkflowService $workflow): RedirectResponse
     {
-        $menu->update($this->validated($request, $menu));
+        $data = $this->validated($request, $menu);
+
+        if ($workflow->isApprovalActive('menus')) {
+            $workflow->submit($request->user(), 'menus', ApprovalRequest::ACTION_UPDATE, $menu->id, $data);
+
+            return redirect()->route('menus.index')->with('status', __('Menu change request submitted for approval.'));
+        }
+
+        $menu->update($data);
 
         return redirect()->route('menus.index')->with('status', __('Menu updated.'));
     }
@@ -91,29 +109,17 @@ class MenusController extends Controller
      * Remove the menu item; children are reparented to the top level
      * by the database and role assignments cascade.
      */
-    public function destroy(Menu $menu): RedirectResponse
+    public function destroy(Menu $menu, ApprovalWorkflowService $workflow): RedirectResponse
     {
+        if ($workflow->isApprovalActive('menus')) {
+            $workflow->submit(request()->user(), 'menus', ApprovalRequest::ACTION_DELETE, $menu->id, []);
+
+            return redirect()->route('menus.index')->with('status', __('Menu change request submitted for approval.'));
+        }
+
         $menu->delete();
 
         return redirect()->route('menus.index')->with('status', __('Menu deleted. Child items moved to the top level.'));
-    }
-
-    /**
-     * Active menus eligible as parents (excluding self and descendants).
-     */
-    protected function parentOptions(?Menu $menu = null)
-    {
-        $query = Menu::query()
-            ->where('is_active', true)
-            ->orderBy('sort_order')
-            ->orderBy('name');
-
-        if ($menu) {
-            $excluded = $menu->descendantIds()->push($menu->id)->all();
-            $query->whereNotIn('id', $excluded);
-        }
-
-        return $query->get();
     }
 
     /**
@@ -126,7 +132,7 @@ class MenusController extends Controller
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'slug' => ['required', 'string', 'max:255', 'alpha_dash', Rule::unique('menus', 'slug')->ignore($menu?->id)],
-            'parent_id' => ['nullable', Rule::in($this->parentOptions($menu)->pluck('id')->all())],
+            'parent_id' => ['nullable', Rule::in(Menu::parentOptions($menu)->pluck('id')->all())],
             'icon' => ['nullable', 'string', Rule::in(Menu::ICONS)],
             'route_name' => [
                 'nullable',

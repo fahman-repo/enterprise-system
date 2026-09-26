@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Concerns\InteractsWithDataTable;
+use App\Models\ApprovalRequest;
 use App\Models\Category;
+use App\Services\ApprovalWorkflowService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -58,9 +60,17 @@ class CategoriesController extends Controller
     /**
      * Store a newly created category.
      */
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request, ApprovalWorkflowService $workflow): RedirectResponse
     {
-        Category::create($this->validated($request));
+        $data = $this->validated($request);
+
+        if ($workflow->isApprovalActive('categories')) {
+            $workflow->submit($request->user(), 'categories', ApprovalRequest::ACTION_CREATE, null, $data);
+
+            return redirect()->route('categories.index')->with('status', __('Category change request submitted for approval.'));
+        }
+
+        Category::create($data);
 
         return redirect()->route('categories.index')->with('status', __('Category created.'));
     }
@@ -79,9 +89,17 @@ class CategoriesController extends Controller
     /**
      * Update the specified category.
      */
-    public function update(Request $request, Category $category): RedirectResponse
+    public function update(Request $request, Category $category, ApprovalWorkflowService $workflow): RedirectResponse
     {
-        $category->update($this->validated($request, $category));
+        $data = $this->validated($request, $category);
+
+        if ($workflow->isApprovalActive('categories')) {
+            $workflow->submit($request->user(), 'categories', ApprovalRequest::ACTION_UPDATE, $category->id, $data);
+
+            return redirect()->route('categories.index')->with('status', __('Category change request submitted for approval.'));
+        }
+
+        $category->update($data);
 
         return redirect()->route('categories.index')->with('status', __('Category updated.'));
     }
@@ -91,10 +109,16 @@ class CategoriesController extends Controller
      * category's parent level. Categories referenced by products
      * cannot be deleted.
      */
-    public function destroy(Category $category): RedirectResponse
+    public function destroy(Category $category, ApprovalWorkflowService $workflow): RedirectResponse
     {
         if ($category->products()->exists()) {
             return back()->withErrors(['category' => __('This category is used by products and cannot be deleted.')]);
+        }
+
+        if ($workflow->isApprovalActive('categories')) {
+            $workflow->submit(request()->user(), 'categories', ApprovalRequest::ACTION_DELETE, $category->id, []);
+
+            return redirect()->route('categories.index')->with('status', __('Category change request submitted for approval.'));
         }
 
         Category::query()

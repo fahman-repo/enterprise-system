@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Concerns\InteractsWithDataTable;
+use App\Models\ApprovalRequest;
 use App\Models\Division;
+use App\Services\ApprovalWorkflowService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -51,9 +53,18 @@ class DivisionsController extends Controller
     /**
      * Store a newly created division.
      */
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request, ApprovalWorkflowService $workflow): RedirectResponse
     {
-        Division::create($this->validated($request));
+        $data = $this->validated($request);
+
+        if ($workflow->isApprovalActive('divisions')) {
+            $workflow->submit($request->user(), 'divisions', ApprovalRequest::ACTION_CREATE, null, $data);
+
+            return redirect()->route('divisions.index')
+                ->with('status', __('Division change request submitted for approval.'));
+        }
+
+        Division::create($data);
 
         return redirect()->route('divisions.index')->with('status', __('Division created.'));
     }
@@ -69,9 +80,18 @@ class DivisionsController extends Controller
     /**
      * Update the specified division.
      */
-    public function update(Request $request, Division $division): RedirectResponse
+    public function update(Request $request, Division $division, ApprovalWorkflowService $workflow): RedirectResponse
     {
-        $division->update($this->validated($request, $division));
+        $data = $this->validated($request, $division);
+
+        if ($workflow->isApprovalActive('divisions')) {
+            $workflow->submit($request->user(), 'divisions', ApprovalRequest::ACTION_UPDATE, $division->id, $data);
+
+            return redirect()->route('divisions.index')
+                ->with('status', __('Division change request submitted for approval.'));
+        }
+
+        $division->update($data);
 
         return redirect()->route('divisions.index')->with('status', __('Division updated.'));
     }
@@ -79,10 +99,17 @@ class DivisionsController extends Controller
     /**
      * Remove the division; divisions with departments cannot be deleted.
      */
-    public function destroy(Division $division): RedirectResponse
+    public function destroy(Division $division, ApprovalWorkflowService $workflow): RedirectResponse
     {
         if ($division->departments()->exists()) {
             return back()->withErrors(['division' => __('This division has departments and cannot be deleted.')]);
+        }
+
+        if ($workflow->isApprovalActive('divisions')) {
+            $workflow->submit(request()->user(), 'divisions', ApprovalRequest::ACTION_DELETE, $division->id, []);
+
+            return redirect()->route('divisions.index')
+                ->with('status', __('Division change request submitted for approval.'));
         }
 
         $division->delete();

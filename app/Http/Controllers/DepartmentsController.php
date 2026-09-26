@@ -3,8 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Concerns\InteractsWithDataTable;
+use App\Models\ApprovalRequest;
 use App\Models\Department;
 use App\Models\Division;
+use App\Services\ApprovalWorkflowService;
 use Illuminate\Contracts\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -65,9 +67,18 @@ class DepartmentsController extends Controller
     /**
      * Store a newly created department.
      */
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request, ApprovalWorkflowService $workflow): RedirectResponse
     {
-        Department::create($this->validated($request));
+        $data = $this->validated($request);
+
+        if ($workflow->isApprovalActive('departments')) {
+            $workflow->submit($request->user(), 'departments', ApprovalRequest::ACTION_CREATE, null, $data);
+
+            return redirect()->route('departments.index')
+                ->with('status', __('Department change request submitted for approval.'));
+        }
+
+        Department::create($data);
 
         return redirect()->route('departments.index')->with('status', __('Department created.'));
     }
@@ -86,9 +97,18 @@ class DepartmentsController extends Controller
     /**
      * Update the specified department.
      */
-    public function update(Request $request, Department $department): RedirectResponse
+    public function update(Request $request, Department $department, ApprovalWorkflowService $workflow): RedirectResponse
     {
-        $department->update($this->validated($request, $department));
+        $data = $this->validated($request, $department);
+
+        if ($workflow->isApprovalActive('departments')) {
+            $workflow->submit($request->user(), 'departments', ApprovalRequest::ACTION_UPDATE, $department->id, $data);
+
+            return redirect()->route('departments.index')
+                ->with('status', __('Department change request submitted for approval.'));
+        }
+
+        $department->update($data);
 
         return redirect()->route('departments.index')->with('status', __('Department updated.'));
     }
@@ -96,10 +116,17 @@ class DepartmentsController extends Controller
     /**
      * Remove the department; departments with org units or employees cannot be deleted.
      */
-    public function destroy(Department $department): RedirectResponse
+    public function destroy(Department $department, ApprovalWorkflowService $workflow): RedirectResponse
     {
         if ($department->orgUnits()->exists() || $department->employees()->exists()) {
             return back()->withErrors(['department' => __('This department has org units or employees and cannot be deleted.')]);
+        }
+
+        if ($workflow->isApprovalActive('departments')) {
+            $workflow->submit(request()->user(), 'departments', ApprovalRequest::ACTION_DELETE, $department->id, []);
+
+            return redirect()->route('departments.index')
+                ->with('status', __('Department change request submitted for approval.'));
         }
 
         $department->delete();

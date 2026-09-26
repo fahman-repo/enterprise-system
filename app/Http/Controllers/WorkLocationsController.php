@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Concerns\InteractsWithDataTable;
+use App\Models\ApprovalRequest;
 use App\Models\WorkLocation;
+use App\Services\ApprovalWorkflowService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -55,9 +57,19 @@ class WorkLocationsController extends Controller
     /**
      * Store a newly created work location.
      */
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request, ApprovalWorkflowService $workflow): RedirectResponse
     {
-        WorkLocation::create($this->validated($request));
+        $data = $this->validated($request);
+
+        if ($workflow->isApprovalActive('work-locations')) {
+            $workflow->submit($request->user(), 'work-locations', ApprovalRequest::ACTION_CREATE, null, $data);
+
+            return redirect()
+                ->route('work-locations.index')
+                ->with('status', __('Work Location change request submitted for approval.'));
+        }
+
+        WorkLocation::create($data);
 
         return redirect()->route('work-locations.index')->with('status', __('Work location created.'));
     }
@@ -73,9 +85,19 @@ class WorkLocationsController extends Controller
     /**
      * Update the specified work location.
      */
-    public function update(Request $request, WorkLocation $workLocation): RedirectResponse
+    public function update(Request $request, WorkLocation $workLocation, ApprovalWorkflowService $workflow): RedirectResponse
     {
-        $workLocation->update($this->validated($request, $workLocation));
+        $data = $this->validated($request, $workLocation);
+
+        if ($workflow->isApprovalActive('work-locations')) {
+            $workflow->submit($request->user(), 'work-locations', ApprovalRequest::ACTION_UPDATE, $workLocation->id, $data);
+
+            return redirect()
+                ->route('work-locations.index')
+                ->with('status', __('Work Location change request submitted for approval.'));
+        }
+
+        $workLocation->update($data);
 
         return redirect()->route('work-locations.index')->with('status', __('Work location updated.'));
     }
@@ -83,10 +105,18 @@ class WorkLocationsController extends Controller
     /**
      * Remove the work location; locations assigned to employees cannot be deleted.
      */
-    public function destroy(WorkLocation $workLocation): RedirectResponse
+    public function destroy(WorkLocation $workLocation, ApprovalWorkflowService $workflow): RedirectResponse
     {
         if ($workLocation->employees()->exists()) {
             return back()->withErrors(['work_location' => __('This work location is assigned to employees and cannot be deleted.')]);
+        }
+
+        if ($workflow->isApprovalActive('work-locations')) {
+            $workflow->submit(request()->user(), 'work-locations', ApprovalRequest::ACTION_DELETE, $workLocation->id, []);
+
+            return redirect()
+                ->route('work-locations.index')
+                ->with('status', __('Work Location change request submitted for approval.'));
         }
 
         $workLocation->delete();

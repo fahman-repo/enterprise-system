@@ -4,6 +4,8 @@ namespace App\Models;
 
 use App\Models\Concerns\Auditable;
 use Database\Factories\ProductFactory;
+use Illuminate\Database\Eloquent\Attributes\Scope;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -46,6 +48,28 @@ class Product extends Model
             'reorder_level' => 'decimal:3',
             'is_active' => 'boolean',
         ];
+    }
+
+    /**
+     * Scope a query to tracked products at or below their reorder level.
+     */
+    #[Scope]
+    protected function lowStock(Builder $query): Builder
+    {
+        return $query->where('products.track_stock', true)
+            ->whereNotNull('products.reorder_level')
+            ->where('products.stock_quantity', '>', 0)
+            ->whereColumn('products.stock_quantity', '<=', 'products.reorder_level');
+    }
+
+    /**
+     * Scope a query to tracked products with no stock on hand.
+     */
+    #[Scope]
+    protected function outOfStock(Builder $query): Builder
+    {
+        return $query->where('products.track_stock', true)
+            ->where('products.stock_quantity', '<=', 0);
     }
 
     public function auditLogName(): string

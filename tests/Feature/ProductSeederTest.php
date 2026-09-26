@@ -48,7 +48,7 @@ test('database seeder creates the hr management menus and admin permissions', fu
 
     expect($management->parent_id)->toBeNull()
         ->and($settings->parent_id)->toBeNull()
-        ->and(Menu::query()->where('parent_id', $management->id)->count())->toBe(5)
+        ->and(Menu::query()->where('parent_id', $management->id)->count())->toBe(6)
         ->and(Menu::query()->where('parent_id', $settings->id)->count())->toBe(6);
 
     $admin = Role::query()->where('slug', 'admin')->sole();
@@ -59,6 +59,7 @@ test('database seeder creates the hr management menus and admin permissions', fu
         ->toContain('departments')
         ->toContain('org-units')
         ->toContain('positions')
+        ->toContain('org-chart')
         ->toContain('grades')
         ->toContain('employment-statuses')
         ->toContain('work-locations')
@@ -75,8 +76,8 @@ test('database seeder is idempotent', function () {
         ->and(Unit::query()->count())->toBe(12)
         ->and(Brand::query()->count())->toBe(15)
         ->and(Category::query()->count())->toBe(35)
-        ->and(Division::query()->count())->toBe(5)
-        ->and(Department::query()->count())->toBe(10)
-        ->and(Employee::query()->count())->toBe(24)
-        ->and(Menu::query()->count())->toBe(22);
+        ->and(Division::query()->count())->toBe(8)
+        ->and(Department::query()->count())->toBe(28)
+        ->and(Employee::query()->count())->toBe(260)
+        ->and(Menu::query()->count())->toBe(26);
 });

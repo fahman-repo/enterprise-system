@@ -173,6 +173,103 @@ test('products index falls back to default order for unknown sort', function () 
         ->assertSeeInOrder(['Alpha Product', 'Zulu Product']);
 });
 
+test('products index shows catalogue summary cards', function () {
+    Product::factory()->create([
+        'name' => 'Active Healthy',
+        'track_stock' => true,
+        'stock_quantity' => 20,
+        'reorder_level' => 5,
+        'is_active' => true,
+    ]);
+    Product::factory()->lowStock()->create([
+        'name' => 'Active Low',
+        'stock_quantity' => 3,
+        'reorder_level' => 5,
+        'is_active' => true,
+    ]);
+    Product::factory()->outOfStock()->create([
+        'name' => 'Active Out',
+        'reorder_level' => 5,
+        'is_active' => true,
+    ]);
+    Product::factory()->inactive()->create([
+        'name' => 'Inactive Healthy',
+        'track_stock' => true,
+        'stock_quantity' => 20,
+        'reorder_level' => 5,
+    ]);
+    Product::factory()->inactive()->lowStock()->create([
+        'name' => 'Inactive Low',
+        'stock_quantity' => 2,
+        'reorder_level' => 5,
+    ]);
+    Product::factory()->untracked()->create([
+        'name' => 'Untracked Zero',
+        'is_active' => true,
+    ]);
+    Product::factory()->create([
+        'name' => 'No Reorder Level',
+        'track_stock' => true,
+        'stock_quantity' => 4,
+        'reorder_level' => null,
+        'is_active' => true,
+    ]);
+    $deleted = Product::factory()->lowStock()->create([
+        'name' => 'Deleted Product',
+        'stock_quantity' => 1,
+        'reorder_level' => 5,
+        'is_active' => true,
+    ]);
+    $deleted->delete();
+
+    $this->get(route('products.index'))
+        ->assertOk()
+        ->assertSeeInOrder([
+            'Total products',
+            '7',
+            'Active products',
+            '5',
+            'Low stock',
+            '2',
+            'Out of stock',
+            '1',
+        ])
+        ->assertDontSee('Deleted Product');
+});
+
+test('products summary cards preserve table controls and replace conflicting filters', function (string $label, array $expectedQuery) {
+    $this->get(route('products.index', [
+        'search' => 'widget',
+        'sort' => 'selling_price',
+        'direction' => 'desc',
+        'per_page' => '25',
+        'page' => '3',
+        'category_id' => '99',
+        'brand_id' => '88',
+        'status' => 'inactive',
+        'stock' => 'low',
+    ]))
+        ->assertOk()
+        ->assertSeeInOrder([route('products.index', $expectedQuery), $label]);
+})->with([
+    'total products' => [
+        'Total products',
+        ['search' => 'widget', 'sort' => 'selling_price', 'direction' => 'desc', 'per_page' => '25'],
+    ],
+    'active products' => [
+        'Active products',
+        ['search' => 'widget', 'sort' => 'selling_price', 'direction' => 'desc', 'per_page' => '25', 'status' => 'active'],
+    ],
+    'low stock' => [
+        'Low stock',
+        ['search' => 'widget', 'sort' => 'selling_price', 'direction' => 'desc', 'per_page' => '25', 'stock' => 'low'],
+    ],
+    'out of stock' => [
+        'Out of stock',
+        ['search' => 'widget', 'sort' => 'selling_price', 'direction' => 'desc', 'per_page' => '25', 'stock' => 'out'],
+    ],
+]);
+
 test('admin can create a product', function () {
     $category = Category::factory()->create();
     $brand = Brand::factory()->create();

@@ -99,6 +99,39 @@ class Role extends Model
         return $this;
     }
 
+    /**
+     * Build the pivot payload from the permission matrix input,
+     * ignoring unknown menu ids and rows with no flags.
+     *
+     * @param  array<int|string, mixed>  $input
+     * @return array<int, array<string, bool>>
+     */
+    public static function permissionsFromInput(array $input): array
+    {
+        return collect($input)
+            ->only(Menu::query()->where('is_active', true)->pluck('id')->all())
+            ->map(fn (mixed $flags) => [
+                'can_view' => (bool) ($flags['can_view'] ?? false),
+                'can_create' => (bool) ($flags['can_create'] ?? false),
+                'can_update' => (bool) ($flags['can_update'] ?? false),
+                'can_delete' => (bool) ($flags['can_delete'] ?? false),
+            ])
+            ->filter(fn (array $flags) => $flags['can_view'] || $flags['can_create'] || $flags['can_update'] || $flags['can_delete'])
+            ->all();
+    }
+
+    /**
+     * Whether saving the matrix would strip the actor's own
+     * roles.update or menus.update access.
+     */
+    public function removesSelfAccess(?object $actor, array $permissions): bool
+    {
+        $loses = fn (string $slug): bool => $actor->canAccess($slug, 'update')
+            && ! ($permissions[$slug]['update'] ?? false);
+
+        return $loses('roles') || $loses('menus');
+    }
+
     protected static function booted(): void
     {
         static::saved(fn () => app(PermissionService::class)->flush());

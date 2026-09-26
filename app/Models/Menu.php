@@ -119,6 +119,24 @@ class Menu extends Model
         return $ids;
     }
 
+    /**
+     * Active menus eligible as parents (excluding self and descendants).
+     */
+    public static function parentOptions(?Menu $menu = null): Collection
+    {
+        $query = static::query()
+            ->where('is_active', true)
+            ->orderBy('sort_order')
+            ->orderBy('name');
+
+        if ($menu) {
+            $excluded = $menu->descendantIds()->push($menu->id)->all();
+            $query->whereNotIn('id', $excluded);
+        }
+
+        return $query->get();
+    }
+
     protected static function booted(): void
     {
         static::saved(fn () => app(PermissionService::class)->flush());

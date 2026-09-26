@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Concerns\InteractsWithDataTable;
+use App\Models\ApprovalRequest;
 use App\Models\Unit;
+use App\Services\ApprovalWorkflowService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -50,9 +52,18 @@ class UnitsController extends Controller
     /**
      * Store a newly created unit.
      */
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request, ApprovalWorkflowService $workflow): RedirectResponse
     {
-        Unit::create($this->validated($request));
+        $data = $this->validated($request);
+
+        if ($workflow->isApprovalActive('units')) {
+            $workflow->submit($request->user(), 'units', ApprovalRequest::ACTION_CREATE, null, $data);
+
+            return redirect()->route('units.index')
+                ->with('status', __('Unit change request submitted for approval.'));
+        }
+
+        Unit::create($data);
 
         return redirect()->route('units.index')->with('status', __('Unit created.'));
     }
@@ -68,9 +79,18 @@ class UnitsController extends Controller
     /**
      * Update the specified unit.
      */
-    public function update(Request $request, Unit $unit): RedirectResponse
+    public function update(Request $request, Unit $unit, ApprovalWorkflowService $workflow): RedirectResponse
     {
-        $unit->update($this->validated($request, $unit));
+        $data = $this->validated($request, $unit);
+
+        if ($workflow->isApprovalActive('units')) {
+            $workflow->submit($request->user(), 'units', ApprovalRequest::ACTION_UPDATE, $unit->id, $data);
+
+            return redirect()->route('units.index')
+                ->with('status', __('Unit change request submitted for approval.'));
+        }
+
+        $unit->update($data);
 
         return redirect()->route('units.index')->with('status', __('Unit updated.'));
     }
@@ -78,10 +98,17 @@ class UnitsController extends Controller
     /**
      * Remove the unit; units referenced by products cannot be deleted.
      */
-    public function destroy(Unit $unit): RedirectResponse
+    public function destroy(Unit $unit, ApprovalWorkflowService $workflow): RedirectResponse
     {
         if ($unit->products()->exists()) {
             return back()->withErrors(['unit' => __('This unit is used by products and cannot be deleted.')]);
+        }
+
+        if ($workflow->isApprovalActive('units')) {
+            $workflow->submit(request()->user(), 'units', ApprovalRequest::ACTION_DELETE, $unit->id, []);
+
+            return redirect()->route('units.index')
+                ->with('status', __('Unit change request submitted for approval.'));
         }
 
         $unit->delete();

@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\ApprovalMatricesController;
+use App\Http\Controllers\ApprovalsController;
 use App\Http\Controllers\AuditLogController;
 use App\Http\Controllers\BrandsController;
 use App\Http\Controllers\CategoriesController;
@@ -12,6 +14,7 @@ use App\Http\Controllers\EntitiesController;
 use App\Http\Controllers\GradesController;
 use App\Http\Controllers\MaritalStatusesController;
 use App\Http\Controllers\MenusController;
+use App\Http\Controllers\OrgChartController;
 use App\Http\Controllers\OrgUnitsController;
 use App\Http\Controllers\PositionsController;
 use App\Http\Controllers\ProductsController;
@@ -76,6 +79,24 @@ Route::middleware('auth')->group(function () {
         ->middleware('menu.permission:audit-logs,view')->name('audit-logs.index');
     Route::get('audit-logs/{activity}', [AuditLogController::class, 'show'])
         ->middleware('menu.permission:audit-logs,view')->name('audit-logs.show');
+
+    Route::get('approval-matrices', [ApprovalMatricesController::class, 'index'])
+        ->middleware('menu.permission:approval-matrices,view')->name('approval-matrices.index');
+    Route::get('approval-matrices/{moduleKey}/edit', [ApprovalMatricesController::class, 'edit'])
+        ->middleware('menu.permission:approval-matrices,update')->name('approval-matrices.edit');
+    Route::put('approval-matrices/{moduleKey}', [ApprovalMatricesController::class, 'update'])
+        ->middleware('menu.permission:approval-matrices,update')->name('approval-matrices.update');
+
+    Route::get('approvals', [ApprovalsController::class, 'index'])
+        ->middleware('menu.permission:approvals,view')->name('approvals.index');
+    Route::get('approvals/{approvalRequest}', [ApprovalsController::class, 'show'])
+        ->middleware('menu.permission:approvals,view')->name('approvals.show');
+    Route::post('approvals/{approvalRequest}/approve', [ApprovalsController::class, 'approve'])
+        ->middleware('menu.permission:approvals,update')->name('approvals.approve');
+    Route::post('approvals/{approvalRequest}/reject', [ApprovalsController::class, 'reject'])
+        ->middleware('menu.permission:approvals,update')->name('approvals.reject');
+    Route::post('approvals/{approvalRequest}/cancel', [ApprovalsController::class, 'cancel'])
+        ->middleware('menu.permission:approvals,delete')->name('approvals.cancel');
 
     Route::get('entities', [EntitiesController::class, 'index'])
         ->middleware('menu.permission:entities,view')->name('entities.index');
@@ -249,6 +270,11 @@ Route::middleware('auth')->group(function () {
         ->middleware('menu.permission:work-locations,update')->name('work-locations.update');
     Route::delete('work-locations/{workLocation}', [WorkLocationsController::class, 'destroy'])
         ->middleware('menu.permission:work-locations,delete')->name('work-locations.destroy');
+
+    Route::get('org-chart', [OrgChartController::class, 'index'])
+        ->middleware('menu.permission:org-chart,view')->name('org-chart.index');
+    Route::get('org-chart/data', [OrgChartController::class, 'data'])
+        ->middleware('menu.permission:org-chart,view')->name('org-chart.data');
 
     Route::get('religions', [ReligionsController::class, 'index'])
         ->middleware('menu.permission:religions,view')->name('religions.index');

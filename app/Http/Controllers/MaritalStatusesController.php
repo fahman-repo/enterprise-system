@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Concerns\InteractsWithDataTable;
+use App\Models\ApprovalRequest;
 use App\Models\MaritalStatus;
+use App\Services\ApprovalWorkflowService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -51,9 +53,19 @@ class MaritalStatusesController extends Controller
     /**
      * Store a newly created marital status.
      */
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request, ApprovalWorkflowService $workflow): RedirectResponse
     {
-        MaritalStatus::create($this->validated($request));
+        $data = $this->validated($request);
+
+        if ($workflow->isApprovalActive('marital-statuses')) {
+            $workflow->submit($request->user(), 'marital-statuses', ApprovalRequest::ACTION_CREATE, null, $data);
+
+            return redirect()
+                ->route('marital-statuses.index')
+                ->with('status', __('Marital Status change request submitted for approval.'));
+        }
+
+        MaritalStatus::create($data);
 
         return redirect()->route('marital-statuses.index')->with('status', __('Marital status created.'));
     }
@@ -69,9 +81,19 @@ class MaritalStatusesController extends Controller
     /**
      * Update the specified marital status.
      */
-    public function update(Request $request, MaritalStatus $maritalStatus): RedirectResponse
+    public function update(Request $request, MaritalStatus $maritalStatus, ApprovalWorkflowService $workflow): RedirectResponse
     {
-        $maritalStatus->update($this->validated($request, $maritalStatus));
+        $data = $this->validated($request, $maritalStatus);
+
+        if ($workflow->isApprovalActive('marital-statuses')) {
+            $workflow->submit($request->user(), 'marital-statuses', ApprovalRequest::ACTION_UPDATE, $maritalStatus->id, $data);
+
+            return redirect()
+                ->route('marital-statuses.index')
+                ->with('status', __('Marital Status change request submitted for approval.'));
+        }
+
+        $maritalStatus->update($data);
 
         return redirect()->route('marital-statuses.index')->with('status', __('Marital status updated.'));
     }
@@ -79,10 +101,18 @@ class MaritalStatusesController extends Controller
     /**
      * Remove the marital status; statuses assigned to employees cannot be deleted.
      */
-    public function destroy(MaritalStatus $maritalStatus): RedirectResponse
+    public function destroy(MaritalStatus $maritalStatus, ApprovalWorkflowService $workflow): RedirectResponse
     {
         if ($maritalStatus->employees()->exists()) {
             return back()->withErrors(['marital_status' => __('This marital status is assigned to employees and cannot be deleted.')]);
+        }
+
+        if ($workflow->isApprovalActive('marital-statuses')) {
+            $workflow->submit(request()->user(), 'marital-statuses', ApprovalRequest::ACTION_DELETE, $maritalStatus->id, []);
+
+            return redirect()
+                ->route('marital-statuses.index')
+                ->with('status', __('Marital Status change request submitted for approval.'));
         }
 
         $maritalStatus->delete();

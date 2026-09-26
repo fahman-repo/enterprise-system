@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Concerns\InteractsWithDataTable;
+use App\Models\ApprovalRequest;
 use App\Models\Brand;
+use App\Services\ApprovalWorkflowService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -51,9 +53,18 @@ class BrandsController extends Controller
     /**
      * Store a newly created brand.
      */
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request, ApprovalWorkflowService $workflow): RedirectResponse
     {
-        Brand::create($this->validated($request));
+        $data = $this->validated($request);
+
+        if ($workflow->isApprovalActive('brands')) {
+            $workflow->submit($request->user(), 'brands', ApprovalRequest::ACTION_CREATE, null, $data);
+
+            return redirect()->route('brands.index')
+                ->with('status', __('Brand change request submitted for approval.'));
+        }
+
+        Brand::create($data);
 
         return redirect()->route('brands.index')->with('status', __('Brand created.'));
     }
@@ -69,9 +80,18 @@ class BrandsController extends Controller
     /**
      * Update the specified brand.
      */
-    public function update(Request $request, Brand $brand): RedirectResponse
+    public function update(Request $request, Brand $brand, ApprovalWorkflowService $workflow): RedirectResponse
     {
-        $brand->update($this->validated($request, $brand));
+        $data = $this->validated($request, $brand);
+
+        if ($workflow->isApprovalActive('brands')) {
+            $workflow->submit($request->user(), 'brands', ApprovalRequest::ACTION_UPDATE, $brand->id, $data);
+
+            return redirect()->route('brands.index')
+                ->with('status', __('Brand change request submitted for approval.'));
+        }
+
+        $brand->update($data);
 
         return redirect()->route('brands.index')->with('status', __('Brand updated.'));
     }
@@ -79,10 +99,17 @@ class BrandsController extends Controller
     /**
      * Remove the brand; brands referenced by products cannot be deleted.
      */
-    public function destroy(Brand $brand): RedirectResponse
+    public function destroy(Brand $brand, ApprovalWorkflowService $workflow): RedirectResponse
     {
         if ($brand->products()->exists()) {
             return back()->withErrors(['brand' => __('This brand is used by products and cannot be deleted.')]);
+        }
+
+        if ($workflow->isApprovalActive('brands')) {
+            $workflow->submit(request()->user(), 'brands', ApprovalRequest::ACTION_DELETE, $brand->id, []);
+
+            return redirect()->route('brands.index')
+                ->with('status', __('Brand change request submitted for approval.'));
         }
 
         $brand->delete();

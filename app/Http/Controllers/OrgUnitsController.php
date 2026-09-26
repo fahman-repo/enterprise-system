@@ -3,8 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Concerns\InteractsWithDataTable;
+use App\Models\ApprovalRequest;
 use App\Models\Department;
 use App\Models\OrgUnit;
+use App\Services\ApprovalWorkflowService;
 use Illuminate\Contracts\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -64,9 +66,18 @@ class OrgUnitsController extends Controller
     /**
      * Store a newly created org unit.
      */
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request, ApprovalWorkflowService $workflow): RedirectResponse
     {
-        OrgUnit::create($this->validated($request));
+        $data = $this->validated($request);
+
+        if ($workflow->isApprovalActive('org-units')) {
+            $workflow->submit($request->user(), 'org-units', ApprovalRequest::ACTION_CREATE, null, $data);
+
+            return redirect()->route('org-units.index')
+                ->with('status', __('Org Unit change request submitted for approval.'));
+        }
+
+        OrgUnit::create($data);
 
         return redirect()->route('org-units.index')->with('status', __('Org unit created.'));
     }
@@ -85,9 +96,18 @@ class OrgUnitsController extends Controller
     /**
      * Update the specified org unit.
      */
-    public function update(Request $request, OrgUnit $orgUnit): RedirectResponse
+    public function update(Request $request, OrgUnit $orgUnit, ApprovalWorkflowService $workflow): RedirectResponse
     {
-        $orgUnit->update($this->validated($request, $orgUnit));
+        $data = $this->validated($request, $orgUnit);
+
+        if ($workflow->isApprovalActive('org-units')) {
+            $workflow->submit($request->user(), 'org-units', ApprovalRequest::ACTION_UPDATE, $orgUnit->id, $data);
+
+            return redirect()->route('org-units.index')
+                ->with('status', __('Org Unit change request submitted for approval.'));
+        }
+
+        $orgUnit->update($data);
 
         return redirect()->route('org-units.index')->with('status', __('Org unit updated.'));
     }
@@ -95,10 +115,17 @@ class OrgUnitsController extends Controller
     /**
      * Remove the org unit; org units with employees cannot be deleted.
      */
-    public function destroy(OrgUnit $orgUnit): RedirectResponse
+    public function destroy(OrgUnit $orgUnit, ApprovalWorkflowService $workflow): RedirectResponse
     {
         if ($orgUnit->employees()->exists()) {
             return back()->withErrors(['org_unit' => __('This org unit has employees and cannot be deleted.')]);
+        }
+
+        if ($workflow->isApprovalActive('org-units')) {
+            $workflow->submit(request()->user(), 'org-units', ApprovalRequest::ACTION_DELETE, $orgUnit->id, []);
+
+            return redirect()->route('org-units.index')
+                ->with('status', __('Org Unit change request submitted for approval.'));
         }
 
         $orgUnit->delete();

@@ -61,6 +61,30 @@ test('admin can create a user', function () {
     $this->assertDatabaseHas('users', ['email' => 'jane@example.com', 'role_id' => $role->id, 'is_active' => true]);
 });
 
+test('users create form renders an enabled password input', function () {
+    $html = $this->get(route('users.create'))->assertOk()->getContent();
+
+    preg_match('/<input\b[^>]*name="password"[^>]*>/', $html, $matches);
+    $passwordInput = $matches[0] ?? null;
+
+    expect($passwordInput)->not->toBeNull()
+        ->and($passwordInput)->toContain('type="password"')
+        ->and($passwordInput)->toContain('required')
+        ->and($passwordInput)->not->toMatch('/\sdisabled(?=[\s>=])/');
+});
+
+test('users edit form renders the password input as optional', function () {
+    $user = User::factory()->create();
+
+    $html = $this->get(route('users.edit', $user))->assertOk()->getContent();
+
+    preg_match('/<input\b[^>]*name="password"[^>]*>/', $html, $matches);
+    $passwordInput = $matches[0] ?? null;
+
+    expect($passwordInput)->not->toBeNull()
+        ->and($passwordInput)->not->toContain('required');
+});
+
 test('admin can update a user without changing the password', function () {
     $user = User::factory()->create();
     $oldHash = $user->password;

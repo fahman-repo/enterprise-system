@@ -34,9 +34,7 @@
                     name="password"
                     type="password"
                     autocomplete="new-password"
-                    @unless ($user)
-                        required
-                    @endunless
+                    :required="$user === null"
                     :placeholder="$user ? __('Leave blank to keep the current password') : '********'"
                 />
             </div>

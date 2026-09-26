@@ -16,6 +16,42 @@
         @include('partials.flash')
 
         @php
+            $summaryLinkParams = collect(request()->only(['search', 'sort', 'direction', 'per_page']))
+                ->filter(fn ($value) => $value !== null && $value !== '')
+                ->all();
+        @endphp
+
+        <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            <a
+                href="{{ route('products.index', $summaryLinkParams) }}"
+                class="block rounded-xl transition-transform hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+            >
+                <x-stat-card :label="__('Total products')" :value="number_format($summary['total_products'])" />
+            </a>
+
+            <a
+                href="{{ route('products.index', array_merge($summaryLinkParams, ['status' => 'active'])) }}"
+                class="block rounded-xl transition-transform hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+            >
+                <x-stat-card :label="__('Active products')" :value="number_format($summary['active_products'])" />
+            </a>
+
+            <a
+                href="{{ route('products.index', array_merge($summaryLinkParams, ['stock' => 'low'])) }}"
+                class="block rounded-xl transition-transform hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+            >
+                <x-stat-card :label="__('Low stock')" :value="number_format($summary['low_stock_products'])" />
+            </a>
+
+            <a
+                href="{{ route('products.index', array_merge($summaryLinkParams, ['stock' => 'out'])) }}"
+                class="block rounded-xl transition-transform hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+            >
+                <x-stat-card :label="__('Out of stock')" :value="number_format($summary['out_of_stock_products'])" />
+            </a>
+        </div>
+
+        @php
             $columns = [
                 ['key' => 'name', 'label' => __('Product'), 'sortable' => true],
                 ['key' => 'category', 'label' => __('Category'), 'sortable' => true],

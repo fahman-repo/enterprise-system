@@ -20,7 +20,20 @@ class AuditLogController extends Controller
      *
      * @var list<string>
      */
-    public const EVENTS = ['created', 'updated', 'deleted', 'login', 'logout', 'failed_login'];
+    public const EVENTS = [
+        'created',
+        'updated',
+        'deleted',
+        'login',
+        'logout',
+        'failed_login',
+        'submitted',
+        'configuration_replaced',
+        'stage_approved',
+        'approved',
+        'rejected',
+        'cancelled',
+    ];
 
     /**
      * Display a listing of audit trail entries.

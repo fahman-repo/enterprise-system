@@ -3,8 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Concerns\InteractsWithDataTable;
+use App\Models\ApprovalRequest;
 use App\Models\Department;
 use App\Models\Position;
+use App\Services\ApprovalWorkflowService;
 use Illuminate\Contracts\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -64,9 +66,18 @@ class PositionsController extends Controller
     /**
      * Store a newly created position.
      */
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request, ApprovalWorkflowService $workflow): RedirectResponse
     {
-        Position::create($this->validated($request));
+        $data = $this->validated($request);
+
+        if ($workflow->isApprovalActive('positions')) {
+            $workflow->submit($request->user(), 'positions', ApprovalRequest::ACTION_CREATE, null, $data);
+
+            return redirect()->route('positions.index')
+                ->with('status', __('Position change request submitted for approval.'));
+        }
+
+        Position::create($data);
 
         return redirect()->route('positions.index')->with('status', __('Position created.'));
     }
@@ -85,9 +96,18 @@ class PositionsController extends Controller
     /**
      * Update the specified position.
      */
-    public function update(Request $request, Position $position): RedirectResponse
+    public function update(Request $request, Position $position, ApprovalWorkflowService $workflow): RedirectResponse
     {
-        $position->update($this->validated($request, $position));
+        $data = $this->validated($request, $position);
+
+        if ($workflow->isApprovalActive('positions')) {
+            $workflow->submit($request->user(), 'positions', ApprovalRequest::ACTION_UPDATE, $position->id, $data);
+
+            return redirect()->route('positions.index')
+                ->with('status', __('Position change request submitted for approval.'));
+        }
+
+        $position->update($data);
 
         return redirect()->route('positions.index')->with('status', __('Position updated.'));
     }
@@ -95,10 +115,17 @@ class PositionsController extends Controller
     /**
      * Remove the position; positions held by employees cannot be deleted.
      */
-    public function destroy(Position $position): RedirectResponse
+    public function destroy(Position $position, ApprovalWorkflowService $workflow): RedirectResponse
     {
         if ($position->employees()->exists()) {
             return back()->withErrors(['position' => __('This position is assigned to employees and cannot be deleted.')]);
+        }
+
+        if ($workflow->isApprovalActive('positions')) {
+            $workflow->submit(request()->user(), 'positions', ApprovalRequest::ACTION_DELETE, $position->id, []);
+
+            return redirect()->route('positions.index')
+                ->with('status', __('Position change request submitted for approval.'));
         }
 
         $position->delete();

@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Concerns\InteractsWithDataTable;
+use App\Models\ApprovalRequest;
 use App\Models\EducationLevel;
+use App\Services\ApprovalWorkflowService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -52,9 +54,19 @@ class EducationLevelsController extends Controller
     /**
      * Store a newly created education level.
      */
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request, ApprovalWorkflowService $workflow): RedirectResponse
     {
-        EducationLevel::create($this->validated($request));
+        $data = $this->validated($request);
+
+        if ($workflow->isApprovalActive('education-levels')) {
+            $workflow->submit($request->user(), 'education-levels', ApprovalRequest::ACTION_CREATE, null, $data);
+
+            return redirect()
+                ->route('education-levels.index')
+                ->with('status', __('Education Level change request submitted for approval.'));
+        }
+
+        EducationLevel::create($data);
 
         return redirect()->route('education-levels.index')->with('status', __('Education level created.'));
     }
@@ -70,9 +82,19 @@ class EducationLevelsController extends Controller
     /**
      * Update the specified education level.
      */
-    public function update(Request $request, EducationLevel $educationLevel): RedirectResponse
+    public function update(Request $request, EducationLevel $educationLevel, ApprovalWorkflowService $workflow): RedirectResponse
     {
-        $educationLevel->update($this->validated($request, $educationLevel));
+        $data = $this->validated($request, $educationLevel);
+
+        if ($workflow->isApprovalActive('education-levels')) {
+            $workflow->submit($request->user(), 'education-levels', ApprovalRequest::ACTION_UPDATE, $educationLevel->id, $data);
+
+            return redirect()
+                ->route('education-levels.index')
+                ->with('status', __('Education Level change request submitted for approval.'));
+        }
+
+        $educationLevel->update($data);
 
         return redirect()->route('education-levels.index')->with('status', __('Education level updated.'));
     }
@@ -80,10 +102,18 @@ class EducationLevelsController extends Controller
     /**
      * Remove the education level; levels assigned to employees cannot be deleted.
      */
-    public function destroy(EducationLevel $educationLevel): RedirectResponse
+    public function destroy(EducationLevel $educationLevel, ApprovalWorkflowService $workflow): RedirectResponse
     {
         if ($educationLevel->employees()->exists()) {
             return back()->withErrors(['education_level' => __('This education level is assigned to employees and cannot be deleted.')]);
+        }
+
+        if ($workflow->isApprovalActive('education-levels')) {
+            $workflow->submit(request()->user(), 'education-levels', ApprovalRequest::ACTION_DELETE, $educationLevel->id, []);
+
+            return redirect()
+                ->route('education-levels.index')
+                ->with('status', __('Education Level change request submitted for approval.'));
         }
 
         $educationLevel->delete();

@@ -3,11 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Concerns\InteractsWithDataTable;
+use App\Models\ApprovalRequest;
 use App\Models\Role;
 use App\Models\User;
-use App\Services\PermissionService;
+use App\Services\ApprovalWorkflowService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
@@ -56,9 +58,21 @@ class UsersController extends Controller
     /**
      * Store a newly created user.
      */
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request, ApprovalWorkflowService $workflow): RedirectResponse
     {
-        User::create($this->validated($request));
+        $data = $this->validated($request);
+
+        if ($workflow->isApprovalActive('users')) {
+            if (isset($data['password'])) {
+                $data['password'] = Hash::make($data['password']);
+            }
+
+            $workflow->submit($request->user(), 'users', ApprovalRequest::ACTION_CREATE, null, $data);
+
+            return redirect()->route('users.index')->with('status', __('User change request submitted for approval.'));
+        }
+
+        User::create($data);
 
         return redirect()->route('users.index')->with('status', __('User created.'));
     }
@@ -77,14 +91,24 @@ class UsersController extends Controller
     /**
      * Update the specified user.
      */
-    public function update(Request $request, User $user): RedirectResponse
+    public function update(Request $request, User $user, ApprovalWorkflowService $workflow): RedirectResponse
     {
         $data = $this->validated($request, $user);
 
-        if ($user->is($request->user()) && $this->locksOut($request->user(), $data['role_id'] ?? null)) {
+        if ($user->is($request->user()) && $request->user()->locksOut($data['role_id'] ?? null)) {
             return back()
                 ->withErrors(['role_id' => __('You cannot remove your own administrative access.')])
                 ->withInput();
+        }
+
+        if ($workflow->isApprovalActive('users')) {
+            if (isset($data['password'])) {
+                $data['password'] = Hash::make($data['password']);
+            }
+
+            $workflow->submit($request->user(), 'users', ApprovalRequest::ACTION_UPDATE, $user->id, $data);
+
+            return redirect()->route('users.index')->with('status', __('User change request submitted for approval.'));
         }
 
         $user->update($data);
@@ -95,14 +119,20 @@ class UsersController extends Controller
     /**
      * Remove the specified user.
      */
-    public function destroy(Request $request, User $user): RedirectResponse
+    public function destroy(Request $request, User $user, ApprovalWorkflowService $workflow): RedirectResponse
     {
         if ($user->is($request->user())) {
             return back()->withErrors(['user' => __('You cannot delete your own account.')]);
         }
 
-        if ($this->isLastAdministrator($user)) {
+        if ($user->isLastAdministrator()) {
             return back()->withErrors(['user' => __('You cannot delete the last user with administrative access.')]);
+        }
+
+        if ($workflow->isApprovalActive('users')) {
+            $workflow->submit($request->user(), 'users', ApprovalRequest::ACTION_DELETE, $user->id, []);
+
+            return redirect()->route('users.index')->with('status', __('User change request submitted for approval.'));
         }
 
         $user->delete();
@@ -134,53 +164,5 @@ class UsersController extends Controller
         $data['is_active'] = $request->boolean('is_active');
 
         return $data;
-    }
-
-    /**
-     * Whether reassigning the actor's own role would strip the ability
-     * to manage roles or menus, locking the actor out.
-     */
-    protected function locksOut(User $actor, ?int $newRoleId): bool
-    {
-        $currentlyManages = $actor->canAccess('roles', 'update') || $actor->canAccess('menus', 'update');
-
-        if (! $currentlyManages) {
-            return false;
-        }
-
-        if (! $newRoleId) {
-            return true;
-        }
-
-        $permissions = app(PermissionService::class)->permissionsForRole($newRoleId);
-
-        return ! (($permissions['roles']['update'] ?? false) || ($permissions['menus']['update'] ?? false));
-    }
-
-    /**
-     * Whether deleting the user would leave no one able to manage
-     * the roles or menus modules.
-     */
-    protected function isLastAdministrator(User $user): bool
-    {
-        if (! $user->role_id) {
-            return false;
-        }
-
-        $service = app(PermissionService::class);
-
-        $adminRoleIds = Role::query()->pluck('id')->filter(fn (int $roleId) => $service->can($roleId, 'roles', 'view')
-            || $service->can($roleId, 'roles', 'update')
-            || $service->can($roleId, 'menus', 'view')
-            || $service->can($roleId, 'menus', 'update'));
-
-        if (! $adminRoleIds->contains($user->role_id)) {
-            return false;
-        }
-
-        return User::query()
-            ->where('id', '!=', $user->id)
-            ->whereIn('role_id', $adminRoleIds)
-            ->doesntExist();
     }
 }

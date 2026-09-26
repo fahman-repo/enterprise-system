@@ -49,6 +49,24 @@ class WorkLocationSeeder extends Seeder
                 'postal_code' => '60293',
                 'phone' => '031-8410000',
             ],
+            [
+                'code' => 'SB-YOG',
+                'name' => 'Yogyakarta Office',
+                'address' => 'Jl. P. Mangkubumi No. 42',
+                'city' => 'Yogyakarta',
+                'province' => 'DI Yogyakarta',
+                'postal_code' => '55233',
+                'phone' => '0274-512000',
+            ],
+            [
+                'code' => 'MKS-MKS',
+                'name' => 'Makassar Branch',
+                'address' => 'Jl. A. P. Pettarani No. 18',
+                'city' => 'Makassar',
+                'province' => 'Sulawesi Selatan',
+                'postal_code' => '90222',
+                'phone' => '0411-885000',
+            ],
         ];
 
         foreach ($locations as $attributes) {

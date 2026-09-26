@@ -37,5 +37,35 @@ class PositionSeeder extends Seeder
                 $attributes,
             );
         }
+
+        $genericRoles = [
+            ['code' => 'POS-CEO', 'name' => 'President Director'],
+            ['code' => 'POS-DIV-HEAD', 'name' => 'Division Head'],
+            ['code' => 'POS-DEP-HEAD', 'name' => 'Department Head'],
+            ['code' => 'POS-UNIT-HEAD', 'name' => 'Unit Head'],
+            ['code' => 'POS-STAFF', 'name' => 'Staff'],
+        ];
+
+        foreach ($genericRoles as $attributes) {
+            Position::query()->updateOrCreate(
+                ['code' => $attributes['code']],
+                ['name' => $attributes['name'], 'department_id' => null],
+            );
+        }
+
+        $departmentsWithPositions = Position::query()
+            ->whereNotNull('department_id')
+            ->pluck('department_id');
+
+        Department::query()
+            ->orderBy('code')
+            ->get(['id', 'code', 'name'])
+            ->reject(fn (Department $department): bool => $departmentsWithPositions->contains($department->id))
+            ->each(function (Department $department): void {
+                Position::query()->updateOrCreate(
+                    ['code' => 'POS-'.substr($department->code, 4).'-STAFF'],
+                    ['name' => $department->name.' Staff', 'department_id' => $department->id],
+                );
+            });
     }
 }

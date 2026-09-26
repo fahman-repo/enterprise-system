@@ -3,15 +3,18 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Concerns\InteractsWithDataTable;
+use App\Models\ApprovalRequest;
 use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Product;
 use App\Models\Unit;
+use App\Services\ApprovalWorkflowService;
 use Illuminate\Contracts\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
 class ProductsController extends Controller
@@ -54,8 +57,33 @@ class ProductsController extends Controller
 
         $products = $query->paginate($this->tablePerPage($request))->withQueryString();
 
+        $summaryRow = Product::query()
+            ->toBase()
+            ->selectRaw('count(*) as total_products')
+            ->selectRaw('count(case when products.is_active then 1 end) as active_products')
+            ->selectSub(
+                Product::query()->lowStock()->selectRaw('count(*)')->toBase(),
+                'low_stock_products',
+            )
+            ->selectSub(
+                Product::query()->outOfStock()->selectRaw('count(*)')->toBase(),
+                'out_of_stock_products',
+            )
+            ->first();
+
+        /**
+         * @var array{total_products: int, active_products: int, low_stock_products: int, out_of_stock_products: int} $summary
+         */
+        $summary = [
+            'total_products' => (int) ($summaryRow->total_products ?? 0),
+            'active_products' => (int) ($summaryRow->active_products ?? 0),
+            'low_stock_products' => (int) ($summaryRow->low_stock_products ?? 0),
+            'out_of_stock_products' => (int) ($summaryRow->out_of_stock_products ?? 0),
+        ];
+
         return view('products.index', [
             'products' => $products,
+            'summary' => $summary,
             'sort' => $sort,
             'direction' => $direction,
             'categories' => Category::treeOptions(),
@@ -74,9 +102,32 @@ class ProductsController extends Controller
     /**
      * Store a newly created product.
      */
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request, ApprovalWorkflowService $workflow): RedirectResponse
     {
         $data = $this->validated($request);
+
+        if ($workflow->isApprovalActive('products')) {
+            unset($data['image'], $data['remove_image']);
+
+            $storedPath = null;
+
+            if ($image = $request->file('image')) {
+                $data['image_path'] = $storedPath = $image->store('products', 'public');
+            }
+
+            try {
+                $workflow->submit($request->user(), 'products', ApprovalRequest::ACTION_CREATE, null, $data);
+            } catch (ValidationException $exception) {
+                if ($storedPath !== null) {
+                    Storage::disk('public')->delete($storedPath);
+                }
+
+                throw $exception;
+            }
+
+            return redirect()->route('products.index')
+                ->with('status', __('Product change request submitted for approval.'));
+        }
 
         if ($image = $request->file('image')) {
             $data['image_path'] = $image->store('products', 'public');
@@ -103,9 +154,38 @@ class ProductsController extends Controller
     /**
      * Update the specified product.
      */
-    public function update(Request $request, Product $product): RedirectResponse
+    public function update(Request $request, Product $product, ApprovalWorkflowService $workflow): RedirectResponse
     {
         $data = $this->validated($request, $product);
+
+        if ($workflow->isApprovalActive('products')) {
+            unset($data['image'], $data['remove_image']);
+
+            $data['image_path'] = $product->image_path;
+
+            if ($request->boolean('remove_image')) {
+                $data['image_path'] = null;
+            }
+
+            $storedPath = null;
+
+            if ($image = $request->file('image')) {
+                $data['image_path'] = $storedPath = $image->store('products', 'public');
+            }
+
+            try {
+                $workflow->submit($request->user(), 'products', ApprovalRequest::ACTION_UPDATE, $product->id, $data);
+            } catch (ValidationException $exception) {
+                if ($storedPath !== null) {
+                    Storage::disk('public')->delete($storedPath);
+                }
+
+                throw $exception;
+            }
+
+            return redirect()->route('products.index')
+                ->with('status', __('Product change request submitted for approval.'));
+        }
 
         if ($request->boolean('remove_image') && $product->image_path) {
             Storage::disk('public')->delete($product->image_path);
@@ -130,8 +210,15 @@ class ProductsController extends Controller
     /**
      * Soft delete the specified product; its image is kept for audit.
      */
-    public function destroy(Product $product): RedirectResponse
+    public function destroy(Product $product, ApprovalWorkflowService $workflow): RedirectResponse
     {
+        if ($workflow->isApprovalActive('products')) {
+            $workflow->submit(request()->user(), 'products', ApprovalRequest::ACTION_DELETE, $product->id, []);
+
+            return redirect()->route('products.index')
+                ->with('status', __('Product change request submitted for approval.'));
+        }
+
         $product->delete();
 
         return redirect()->route('products.index')->with('status', __('Product deleted.'));
@@ -182,17 +269,13 @@ class ProductsController extends Controller
         }
 
         if ($request->query('stock') === 'out') {
-            $query->where('products.track_stock', true)
-                ->where('products.stock_quantity', '<=', 0);
+            $query->outOfStock();
 
             return;
         }
 
         if ($request->query('stock') === 'low') {
-            $query->where('products.track_stock', true)
-                ->whereNotNull('products.reorder_level')
-                ->where('products.stock_quantity', '>', 0)
-                ->whereColumn('products.stock_quantity', '<=', 'products.reorder_level');
+            $query->lowStock();
         }
     }
 

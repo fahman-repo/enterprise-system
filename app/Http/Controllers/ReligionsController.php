@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Concerns\InteractsWithDataTable;
+use App\Models\ApprovalRequest;
 use App\Models\Religion;
+use App\Services\ApprovalWorkflowService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -47,9 +49,19 @@ class ReligionsController extends Controller
     /**
      * Store a newly created religion.
      */
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request, ApprovalWorkflowService $workflow): RedirectResponse
     {
-        Religion::create($this->validated($request));
+        $data = $this->validated($request);
+
+        if ($workflow->isApprovalActive('religions')) {
+            $workflow->submit($request->user(), 'religions', ApprovalRequest::ACTION_CREATE, null, $data);
+
+            return redirect()
+                ->route('religions.index')
+                ->with('status', __('Religion change request submitted for approval.'));
+        }
+
+        Religion::create($data);
 
         return redirect()->route('religions.index')->with('status', __('Religion created.'));
     }
@@ -65,9 +77,19 @@ class ReligionsController extends Controller
     /**
      * Update the specified religion.
      */
-    public function update(Request $request, Religion $religion): RedirectResponse
+    public function update(Request $request, Religion $religion, ApprovalWorkflowService $workflow): RedirectResponse
     {
-        $religion->update($this->validated($request, $religion));
+        $data = $this->validated($request, $religion);
+
+        if ($workflow->isApprovalActive('religions')) {
+            $workflow->submit($request->user(), 'religions', ApprovalRequest::ACTION_UPDATE, $religion->id, $data);
+
+            return redirect()
+                ->route('religions.index')
+                ->with('status', __('Religion change request submitted for approval.'));
+        }
+
+        $religion->update($data);
 
         return redirect()->route('religions.index')->with('status', __('Religion updated.'));
     }
@@ -75,10 +97,18 @@ class ReligionsController extends Controller
     /**
      * Remove the religion; religions assigned to employees cannot be deleted.
      */
-    public function destroy(Religion $religion): RedirectResponse
+    public function destroy(Religion $religion, ApprovalWorkflowService $workflow): RedirectResponse
     {
         if ($religion->employees()->exists()) {
             return back()->withErrors(['religion' => __('This religion is assigned to employees and cannot be deleted.')]);
+        }
+
+        if ($workflow->isApprovalActive('religions')) {
+            $workflow->submit(request()->user(), 'religions', ApprovalRequest::ACTION_DELETE, $religion->id, []);
+
+            return redirect()
+                ->route('religions.index')
+                ->with('status', __('Religion change request submitted for approval.'));
         }
 
         $religion->delete();
